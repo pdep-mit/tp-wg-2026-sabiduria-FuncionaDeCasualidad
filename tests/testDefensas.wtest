@@ -1,0 +1,172 @@
+import defensas.*
+import zombies.*
+import mapa.*
+
+// ──────────────────────────────────────────────────────────────────
+// Tests de lógica de dominio de las defensas (Verdulero y Panadero)
+// Validan el comportamiento polimórfico: ambas responden a actualizar()
+// pero cada una lo implementa de forma diferente.
+// ──────────────────────────────────────────────────────────────────
+
+describe "Verdulero - lógica de dominio" {
+
+  const mapaDeTest = new Mapa(filas = 9, columnas = 20)
+  const verdulero = new Verdulero(
+    position = game.at(2, 3),
+    vida = 50,
+    costo = 10,
+    danio = 20,
+    mapa = mapaDeTest,
+    intervaloDeColocacion = 5,
+    intervaloDeAccion = 10
+  )
+
+  test "comienza con la vida indicada" {
+    assert.equals(50, verdulero.vida())
+  }
+
+  test "recibir daño reduce la vida" {
+    verdulero.recibirDanio(15)
+    assert.equals(35, verdulero.vida())
+  }
+
+  test "recibir daño múltiple acumula la reducción" {
+    verdulero.recibirDanio(10)
+    verdulero.recibirDanio(10)
+    assert.equals(30, verdulero.vida())
+  }
+
+  test "muere cuando su vida llega a 0" {
+    verdulero.recibirDanio(50)
+    assert.that(verdulero.estaMuerta())
+  }
+
+  test "muere cuando su vida queda negativa" {
+    verdulero.recibirDanio(999)
+    assert.that(verdulero.estaMuerta())
+  }
+
+  test "no está muerta si tiene vida positiva" {
+    assert.notThat(verdulero.estaMuerta())
+  }
+
+  test "no puede actuar si no pasaron suficientes ticks" {
+    assert.notThat(verdulero.puedeActuar())
+  }
+
+  test "puede actuar cuando se acumulan suficientes ticks" {
+    // Simular que pasaron los ticks suficientes llamando a actualizar()
+    // (cada llamada incrementa ticksDesdeUltimaAccion en 1).
+    // Como no hay zombies en el mapa, no va a atacar y el contador crece.
+    10.times({ i => verdulero.actualizar() })
+    assert.that(verdulero.puedeActuar())
+  }
+
+  test "su costo es el indicado al construirlo" {
+    assert.equals(10, verdulero.costo())
+  }
+
+  test "su posición es la indicada al construirlo" {
+    assert.equals(game.at(2, 3), verdulero.position())
+  }
+}
+
+describe "Panadero - lógica de dominio" {
+
+  const mapaDeTest = new Mapa(filas = 9, columnas = 20)
+  const panadero = new Panadero(
+    position = game.at(2, 5),
+    vida = 300,
+    costo = 5,
+    mapa = mapaDeTest,
+    intervaloDeColocacion = 30,
+    intervaloDeAccion = 1
+  )
+
+  test "comienza con la vida indicada (alta para una barrera)" {
+    assert.equals(300, panadero.vida())
+  }
+
+  test "recibir daño reduce la vida" {
+    panadero.recibirDanio(20)
+    assert.equals(280, panadero.vida())
+  }
+
+  test "aguanta muchos golpes antes de morir" {
+    14.times({ i => panadero.recibirDanio(20) })
+    assert.notThat(panadero.estaMuerta())
+    // Un golpe más lo mata (15 * 20 = 300)
+    panadero.recibirDanio(20)
+    assert.that(panadero.estaMuerta())
+  }
+
+  test "no está muerta si tiene vida positiva" {
+    assert.notThat(panadero.estaMuerta())
+  }
+
+  test "muere cuando su vida llega a 0" {
+    panadero.recibirDanio(300)
+    assert.that(panadero.estaMuerta())
+  }
+
+  test "su costo es barato" {
+    assert.equals(5, panadero.costo())
+  }
+
+  test "actualizar solo incrementa su contador (es barrera pasiva)" {
+    // El panadero no ataca, su actualizar() solo cuenta ticks.
+    // Verificamos que no falla ni cambia estado inesperadamente.
+    panadero.actualizar()
+    assert.equals(300, panadero.vida())
+    assert.notThat(panadero.estaMuerta())
+  }
+
+  test "su posición es la indicada al construirlo" {
+    assert.equals(game.at(2, 5), panadero.position())
+  }
+}
+
+describe "Polimorfismo - actualizar() en defensas diferentes" {
+
+  const mapaDeTest = new Mapa(filas = 9, columnas = 20)
+  const verdulero = new Verdulero(
+    position = game.at(2, 3),
+    vida = 50,
+    costo = 10,
+    danio = 20,
+    mapa = mapaDeTest,
+    intervaloDeColocacion = 5,
+    intervaloDeAccion = 10
+  )
+  const panadero = new Panadero(
+    position = game.at(2, 5),
+    vida = 300,
+    costo = 5,
+    mapa = mapaDeTest,
+    intervaloDeColocacion = 30,
+    intervaloDeAccion = 1
+  )
+
+  test "todas las defensas entienden actualizar() sin herencia" {
+    // El motor puede enviar el mismo mensaje a cualquier defensa.
+    // Este test valida que ambas responden sin error.
+    const defensas = [verdulero, panadero]
+    defensas.forEach({ defensa => defensa.actualizar() })
+    // Si llegamos acá sin error, el polimorfismo funciona.
+    assert.that(true)
+  }
+
+  test "todas las defensas entienden recibirDanio() sin herencia" {
+    const defensas = [verdulero, panadero]
+    defensas.forEach({ defensa => defensa.recibirDanio(10) })
+    assert.equals(40, verdulero.vida())
+    assert.equals(290, panadero.vida())
+  }
+
+  test "todas las defensas entienden estaMuerta() sin herencia" {
+    const defensas = [verdulero, panadero]
+    defensas.forEach({ defensa =>
+      assert.notThat(defensa.estaMuerta())
+    })
+  }
+}

@@ -17,7 +17,9 @@ class Mapa {
   method defensas() { /* TODO: devolver las defensas de los casilleros. */ }
   method agregarZombie(zombie) { /* TODO: incorporar un enemigo. */ }
   method quitarZombie(zombie) { /* TODO: retirar un enemigo muerto. */ }
-  method zombiesEnLinea(fila) { /* TODO: devolver los enemigos de esa fila. */ }
+  method zombiesEnLinea(fila) {
+    return zombies.filter({ zombie => zombie.position().y() == fila })
+  }
   method zombiesEnRango(fila, columna, alcance) { /* TODO: buscar objetivos. */ }
   method defensaEn(fila, columna) { /* TODO: devolver la defensa o null. */ }
   method algunZombieLlegoALaCasa() { /* TODO: consultar el límite de llegada. */ }
