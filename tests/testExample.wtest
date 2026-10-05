@@ -1,10 +1,11 @@
 // Archivo de tests de referencia, borrar luego de desarrollar propios
-import personajes.*
-
+import defensas.*
+import zombies.*
+import inicio.*
 describe "grupo de tests" {
 
-  test "Alien comienza en la posicion (1,4)" {
-    assert.equals(game.at(1,4), alien.position())
+  test "ZombieDePrueba comienza en la posicion (18,7)" {
+    assert.equals(game.at(18,7), configuraciones.zombieDePrueba.position())
   }
 
 }
