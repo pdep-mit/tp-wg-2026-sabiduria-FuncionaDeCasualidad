@@ -4,6 +4,7 @@ import fondo.*
 object assets {
     method iniciar(){
         game.addVisualCharacter(alien)
+        game.addVisualCharacter(zombie)
     }
 
 }

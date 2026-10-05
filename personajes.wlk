@@ -3,6 +3,7 @@ object alien {
   method image() = "alien_azul.png"
 }
 
-object abeja {
-    method image() = "abeja.png"
+object zombie {
+  method position() = game.at(18, 7)
+  method image() = "zombie1.png"
 }

@@ -4,9 +4,9 @@ import fondo.*
 
 program NombreDeJuego {
 	game.title("Grupo: FuncionaDeCasualidad| Nombre de jueguito")
-	game.height(20)
-	game.width(35)
-
+	game.width(20)
+	game.height(10)
+	
 	fondo.iniciar()
 	
 	assets.iniciar()
