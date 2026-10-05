@@ -1,3 +1,5 @@
+import wollok.game.*
+
 // Los valores de balance se reciben al construir cada defensa.
 // No se asignan vida, costos ni tiempos arbitrarios.
 // Cada defensa declara sus propios atributos y responde a actualizar().
@@ -5,6 +7,8 @@
 
 // NOTA: Dejar Vendecursos para lo último, priorizar Verdulero y Panadero
 class Vendecursos {
+  // Sprite provisional hasta que tengamos una imagen propia.
+  const property imagen = "alien_azul.png"
   var property vida
   const property costo
   var property fila
@@ -17,6 +21,9 @@ class Vendecursos {
   const property sistemaDePesos
   const property pesosPorVenta
 
+  method position() = game.at(columna, fila)
+  method image() = imagen
+
   method recibirDanio(cantidad) { /* TODO: reducir vida. */ }
   method estaMuerta() { /* TODO: indicar si vida <= 0. */ }
   method puedeActuar() { /* TODO: consultar su intervalo de acción. */ }
@@ -26,6 +33,8 @@ class Vendecursos {
 }
 
 class Verdulero {
+  // Sprite provisional hasta que tengamos una imagen propia.
+  const property imagen = "alien_azul.png"
   var property vida
   const property costo
   var property fila
@@ -37,6 +46,9 @@ class Verdulero {
   var ticksDesdeUltimaAccion = 0
   const property danio
 
+  method position() = game.at(columna, fila)
+  method image() = imagen
+
   method recibirDanio(cantidad) { /* TODO: reducir vida. */ }
   method estaMuerta() { /* TODO: indicar si vida <= 0. */ }
   method puedeActuar() { /* TODO: consultar su intervalo de acción. */ }
@@ -46,6 +58,8 @@ class Verdulero {
 }
 
 class Panadero {
+  // Sprite provisional hasta que tengamos una imagen propia.
+  const property imagen = "alien_azul.png"
   var property vida
   const property costo
   var property fila
@@ -55,6 +69,9 @@ class Panadero {
   const property intervaloDeColocacion
   const property intervaloDeAccion
   var ticksDesdeUltimaAccion = 0
+
+  method position() = game.at(columna, fila)
+  method image() = imagen
 
   method recibirDanio(cantidad) { /* TODO: reducir vida. */ }
   method estaMuerta() { /* TODO: indicar si vida <= 0. */ }

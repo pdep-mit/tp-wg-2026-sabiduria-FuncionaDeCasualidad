@@ -6,8 +6,8 @@ import pesos.*
 import motor.*
 import controles.*
 
-program NombreDeJuego {
-	game.title("Grupo: FuncionaDeCasualidad| Nombre de jueguito")
+program ConurbanoVsZombies {
+	game.title("Grupo: FuncionaDeCasualidad | Conurbano vs. Zombies")
 	game.width(20)
 	game.height(10)
 	

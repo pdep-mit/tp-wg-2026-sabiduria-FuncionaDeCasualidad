@@ -1,5 +1,7 @@
+import wollok.game.*
+
 // Esqueleto de dominio: los cuerpos con TODO quedan para el equipo.
-// fila/columna son coordenadas lógicas; no dependen de wollok.game.
+// Las clases visuales traducen columna/fila a x/y de wollok.game.
 class Mapa {
   const property filas
   const property columnas
@@ -22,9 +24,13 @@ class Mapa {
 }
 
 class Casillero {
+  const property imagen = "tile_centro.png"
   const property fila
   const property columna
   var property defensa = null
+
+  method position() = game.at(columna, fila)
+  method image() = imagen
 
   method estaOcupado() { /* TODO: consultar si contiene una defensa. */ }
   method colocarDefensa(unaDefensa) { /* TODO: rechazar una segunda defensa. */ }

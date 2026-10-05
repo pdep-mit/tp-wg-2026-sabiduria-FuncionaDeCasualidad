@@ -1,4 +1,7 @@
+import wollok.game.*
+
 class ZombieComun {
+  var property imagen = "zombie1.png"
   var property vida
   var property velocidad
   const property danio
@@ -9,6 +12,9 @@ class ZombieComun {
   var ticksDesdeUltimoAtaque = 0
   var factorDeRalentizacion = 1
   var ticksDeRalentizacionRestantes = 0
+
+  method position() = game.at(columna, fila)
+  method image() = imagen
 
   method actualizar() { /* TODO: avanzar o atacar, y actualizar efectos temporales. */ }
   method avanzar() { /* TODO: desplazarse por la misma fila hacia la casa. */ }

@@ -10,7 +10,8 @@
 
 Los archivos de dominio contienen declaraciones y cuerpos vacíos con `TODO`,
 no un juego implementado. Los métodos con `TODO` no hacen nada y no devuelven
-aún los resultados indicados en los comentarios. Los métodos `iniciar()` de
+aún los resultados indicados en los comentarios. Los métodos visuales
+`position()` e `image()` ya están implementados. Los métodos `iniciar()` de
 `motor` y `controles` ya asignan sus dependencias para conectar el punto de entrada.
 Cada clase es independiente y declara sus propios atributos y métodos.
 Todas las defensas tienen un placeholder `actualizar()`: el motor podrá enviar
@@ -22,8 +23,8 @@ de pesos y el generador, e inicia el motor y los controles. Un temporizador
 llama a `motor.actualizar()` cada 100 ms. Este método sigue vacío: la conexión
 no implementa todavía los ticks de dominio ni dibuja el mapa nuevo.
 
-La configuración provisional del programa usa 19 filas (reserva la fila
-superior para el fondo), 35 columnas, 100 pesos iniciales, generación de
+La configuración provisional del programa usa 9 filas (reserva la fila
+superior para el fondo), 20 columnas, 100 pesos iniciales, generación de
 25 pesos cada 50 ticks y aparición de zombies cada 30 ticks. Ajustar esos
 valores con el equipo. Los intervalos solo tendrán efecto al implementar
 los métodos pendientes. El registro de teclas y clicks también sigue pendiente.
@@ -31,8 +32,8 @@ los métodos pendientes. El registro de teclas y clicks también sigue pendiente
 | Archivo | Responsabilidad y declaraciones |
 | --- | --- |
 | `mapa.wlk` | `Mapa` y `Casillero`: grilla, ocupación, defensas y zombies. |
-| `defensas.wlk` | Vendecursos, Verdulero y Panadero como clases independientes; también tipos futuros, Migas y el objeto `fusiones`. |
-| `zombies.wlk` | `ZombieComun` y tipos futuros como clases independientes. |
+| `defensas.wlk` | Vendecursos, Verdulero y Panadero como clases independientes con sus métodos visuales. |
+| `zombies.wlk` | `ZombieComun`, con sus métodos visuales. |
 | `pesos.wlk` | `SistemaDePesos`: saldo, generación automática y gastos. |
 | `motor.wlk` | Objeto `motor` y `GeneradorDeZombies`: partida, ticks, apariciones, recargas y eliminación de muertos. |
 | `controles.wlk` | Objeto `controles`: selección con 1/2/3 y pedido de colocación. |
@@ -64,8 +65,8 @@ dependencias siguen pendientes.
 
 ### Contratos para completar el checkpoint 1
 
-- Usar `fila` y `columna` como coordenadas lógicas. Acordar su traducción a
-  `game.at(x, y)` en el adaptador visual, junto con el sentido de avance y el
+- Usar `fila` y `columna` como coordenadas lógicas. Los métodos `position()`
+  usan `game.at(columna, fila)`. Falta acordar el sentido de avance y el
   límite que representa la casa.
 - Al construir objetos, suministrar los atributos sin valor inicial. Definir
   dimensiones, vida, costos, daño, velocidad, saldo inicial e intervalos con el
@@ -89,13 +90,28 @@ dependencias siguen pendientes.
 - `controles` creará una instancia nueva por colocación. Selección propuesta
   por los requisitos: 1 Vendecursos, 2 Verdulero, 3 Panadero.
 
-### Etapas posteriores
+### Parte visual en las mismas clases
 
-Carnicero, Aguatero, Empanadero, Parrillero, Juguero, Sandwichero, Migas,
-ZombieAlbanil, ZombieMotoquero, ZombieInspector y `fusiones` están declarados
-para orientar el trabajo futuro. Falta acordar las reglas detalladas de las
-fusiones, del inspector y de los efectos antes de implementarlos. El límite
-de cinco enemigos del Parrillero proviene de los requisitos.
+Vendecursos, Verdulero, Panadero, ZombieComun y Casillero responden a
+`position()` e `image()`. Una instancia se puede registrar con
+`game.addVisual(unaInstancia)` y retirar con `game.removeVisual(unaInstancia)`.
+El motor deberá coordinar ese registro con la colocación y eliminación en el
+mapa, usando la misma instancia para el dominio y la pantalla.
+
+Cambiar `fila` o `columna` modifica la posición que devuelve `position()`;
+no se almacena una segunda posición visual. Cada clase declara estos métodos
+directamente, sin herencia.
+
+ZombieComun utiliza `zombie1.png`; su propiedad `imagen` puede cambiar a
+`zombie2.png` para una futura animación. Las defensas usan `alien_azul.png`
+como placeholder y permiten indicar `imagen` al construirlas. Casillero usa
+`tile_centro.png`; el fondo existente ya dibuja el terreno, por lo que no es
+necesario agregar también cada casillero a la pantalla.
+
+El objeto `zombie` de `personajes.wlk` sigue siendo el ejemplo visual actual.
+Reemplazarlo por una instancia de ZombieComun al implementar la creación de
+enemigos. Agregar los métodos visuales a las clases no implementa movimiento,
+combate, animación ni generación de enemigos.
 
 ### Tests pendientes para Lucho
 
