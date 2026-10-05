@@ -10,7 +10,7 @@ class Vendecursos {
   // Sprite provisional hasta que tengamos una imagen propia.
   const property imagen = "alien_azul.png"
   var property vida
-  const property costo
+  const property costo = 5
   var property fila
   var property columna
   const property mapa
@@ -36,7 +36,7 @@ class Verdulero {
   // Sprite provisional hasta que tengamos una imagen propia.
   const property imagen = "alien_azul.png"
   var property vida
-  const property costo
+  const property costo = 10
   var property fila
   var property columna
   const property mapa
@@ -59,9 +59,9 @@ class Verdulero {
 
 class Panadero {
   // Sprite provisional hasta que tengamos una imagen propia.
-  const property imagen = "alien_azul.png"
+  const property imagen = "robot_brazos_abiertos.png"
   var property vida
-  const property costo
+  const property costo = 5
   var property fila
   var property columna
   const property mapa
