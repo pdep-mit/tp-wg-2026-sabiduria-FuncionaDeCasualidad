@@ -1,6 +1,10 @@
 import wollok.game.*
 import inicio.*
 import fondo.*
+import mapa.*
+import pesos.*
+import motor.*
+import controles.*
 
 program NombreDeJuego {
 	game.title("Grupo: FuncionaDeCasualidad| Nombre de jueguito")
@@ -10,6 +14,22 @@ program NombreDeJuego {
 	fondo.iniciar()
 	
 	assets.iniciar()
+
+	const milisegundosPorTick = 100
+	const mapaDeJuego = new Mapa(filas = game.height() - 1, columnas = game.width())
+	const pesosDeJuego = new SistemaDePesos(
+		pesosDisponibles = 100,
+		pesosPorGeneracion = 25,
+		intervaloDeGeneracion = 50
+	)
+	const generador = new GeneradorDeZombies(
+		mapa = mapaDeJuego,
+		intervaloDeAparicion = 30
+	)
+
+	motor.iniciar(mapaDeJuego, pesosDeJuego, generador)
+	controles.iniciar(motor)
+	game.onTick(milisegundosPorTick, "actualizarMotor", { => motor.actualizar() })
 
 	game.start()
 }

@@ -22,6 +22,10 @@ Recuerden que para cada checkpoint hay [expectativas mínimas](https://docs.goog
 
 # Cómo jugar
 
+La estructura de dominio de **Conurbano vs. Zombies** está declarada como
+placeholders, con la lógica pendiente. Ver la [guía de estructura y contratos](explicaciones.md#estructura-inicial-de-conurbano-vs-zombies)
+para completar los métodos y repartir el trabajo del checkpoint 1.
+
 ## Objetivo
 
 TODO
