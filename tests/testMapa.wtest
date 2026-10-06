@@ -41,8 +41,7 @@ describe "Casillero - ocupación y colocación" {
     vida = 300,
     costo = 5,
     mapa = new Mapa(filas = 9, columnas = 20),
-    intervaloDeColocacion = 30,
-    intervaloDeAccion = 1
+    intervaloDeColocacion = 30
   )
 
   test "un casillero nuevo no está ocupado y su posición corresponde a x=columna, y=fila" {
@@ -65,8 +64,7 @@ describe "Casillero - ocupación y colocación" {
       vida = 100,
       costo = 5,
       mapa = new Mapa(filas = 9, columnas = 20),
-      intervaloDeColocacion = 30,
-      intervaloDeAccion = 1
+      intervaloDeColocacion = 30
     )
     assert.throwsException({ casillero.colocarDefensa(otraDefensa) })
   }
@@ -119,8 +117,7 @@ describe "Mapa - colocación y gestión de defensas" {
       vida = 100,
       costo = 5,
       mapa = mapa,
-      intervaloDeColocacion = 30,
-      intervaloDeAccion = 1
+      intervaloDeColocacion = 30
     )
     assert.throwsException({ mapa.colocarDefensa(otraDefensa, 2, 3) })
     assert.throwsException({ mapa.colocarDefensa(otraDefensa, 10, 10) })

@@ -42,13 +42,13 @@ describe "Controles - selección y colocación de defensas" {
     const verdulero = controles.crearDefensaSeleccionada(3, 4)
     assert.notEquals(null, verdulero)
     assert.equals(game.at(4, 3), verdulero.position())
-    assert.equals(10, verdulero.costo())
+    assert.equals(100, verdulero.costo())
 
     controles.seleccionarDefensa(3)
     const panadero = controles.crearDefensaSeleccionada(1, 2)
     assert.notEquals(null, panadero)
     assert.equals(game.at(2, 1), panadero.position())
-    assert.equals(300, panadero.vida())
+    assert.equals(500, panadero.vida())
 
     controles.seleccionarDefensa(1)
     const vendecursos = controles.crearDefensaSeleccionada(0, 0)

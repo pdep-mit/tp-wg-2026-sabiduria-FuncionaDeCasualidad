@@ -79,8 +79,7 @@ describe "Panadero - lógica de dominio" {
     vida = 300,
     costo = 5,
     mapa = mapaDeTest,
-    intervaloDeColocacion = 30,
-    intervaloDeAccion = 1
+    intervaloDeColocacion = 30
   )
 
   test "comienza con la vida indicada (alta para una barrera)" {
@@ -113,9 +112,7 @@ describe "Panadero - lógica de dominio" {
     assert.equals(5, panadero.costo())
   }
 
-  test "actualizar solo incrementa su contador (es barrera pasiva)" {
-    // El panadero no ataca, su actualizar() solo cuenta ticks.
-    // Verificamos que no falla ni cambia estado inesperadamente.
+  test "actualizar no cambia la vida de una barrera pasiva" {
     panadero.actualizar()
     assert.equals(300, panadero.vida())
     assert.notThat(panadero.estaMuerta())
@@ -143,8 +140,7 @@ describe "Polimorfismo - actualizar() en defensas diferentes" {
     vida = 300,
     costo = 5,
     mapa = mapaDeTest,
-    intervaloDeColocacion = 30,
-    intervaloDeAccion = 1
+    intervaloDeColocacion = 30
   )
 
   test "todas las defensas entienden actualizar() sin herencia" {
@@ -165,8 +161,6 @@ describe "Polimorfismo - actualizar() en defensas diferentes" {
 
   test "todas las defensas entienden estaMuerta() sin herencia" {
     const defensas = [verdulero, panadero]
-    defensas.forEach({ defensa =>
-      assert.notThat(defensa.estaMuerta())
-    })
+    assert.equals([false, false], defensas.map({ defensa => defensa.estaMuerta() }))
   }
 }
