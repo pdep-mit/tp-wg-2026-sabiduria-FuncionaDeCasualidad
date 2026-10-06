@@ -1,0 +1,45 @@
+import pesos.*
+
+describe "Tests para SistemaDePesos" {
+
+  const pesosDeJuego = new SistemaDePesos(
+    pesosDisponibles = 100,
+    pesosPorGeneracion = 25,
+    intervaloDeGeneracion = 50
+  )
+
+
+test "actualizar no genera pesos antes de los 50 ticks y suma 25 al cumplirlos" {
+    // Simulamos 49 ticks (uno menos que el intervalo)
+    49.times({ i => pesosDeJuego.actualizar() })
+    assert.equals(100, pesosDeJuego.pesosDisponibles()) // Permanece en 100
+
+    // En el tick 50 se cumple el intervalo
+    pesosDeJuego.actualizar()
+    assert.equals(125, pesosDeJuego.pesosDisponibles()) // Suma 25 pesos
+  }
+
+  test "agregarPesos incrementa correctamente el saldo de pesosDisponibles" {
+    pesosDeJuego.agregarPesos(50)
+    assert.equals(150, pesosDeJuego.pesosDisponibles())
+  }
+
+  test "alcanzaPara devuelve true si los pesosDisponibles son mayores o iguales al costo" {
+    assert.that(pesosDeJuego.alcanzaPara(100)) // Exactamente igual
+    assert.that(pesosDeJuego.alcanzaPara(50))  // Menor al saldo
+  }
+
+  test "alcanzaPara devuelve false si los pesosDisponibles son menores al costo" {
+    assert.notThat(pesosDeJuego.alcanzaPara(150))
+  }
+
+  test "gastarPesos descuenta del saldo cuando alcanzaPara es verdadero" {
+    pesosDeJuego.gastarPesos(40)
+    assert.equals(60, pesosDeJuego.pesosDisponibles())
+  }
+
+  test "gastarPesos no modifica el saldo cuando no alcanzan los pesos" {
+    pesosDeJuego.gastarPesos(200)
+    assert.equals(100, pesosDeJuego.pesosDisponibles())
+  }
+}
