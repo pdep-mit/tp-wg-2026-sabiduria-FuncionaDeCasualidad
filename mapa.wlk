@@ -23,7 +23,7 @@ class Mapa {
     return zombies.filter({ zombie => zombie.position().y() == fila })
   }
   method zombiesEnRango(fila, columna, alcance) { /* TODO: buscar objetivos. */ }
-  method defensaEn(fila, columna) { /* TODO: devolver la defensa o null. */ }
+  method defensaEn(fila, columna) = null
   method algunZombieLlegoALaCasa() { /* TODO: consultar el límite de llegada. */ }
 }
 

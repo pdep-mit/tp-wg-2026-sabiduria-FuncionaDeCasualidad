@@ -12,13 +12,23 @@ class ZombieComun {
   //var property columna
   const property intervaloDeAtaque = 2
   var ticksDesdeUltimoAtaque = 0
+  var ticksAnimacionDanio = 0
+  const imagenDanio = "zombie_recibe_ataque.png"
   //var factorDeRalentizacion = 1
   //var ticksDeRalentizacionRestantes = 0
   var imagenActual = "zombie1.png"
-  method image() = imagenActual
+  method image() {
+    if(ticksAnimacionDanio > 0){
+      return imagenDanio
+    }
+    return imagenActual
+  }
 
   method actualizar() {
     if(!self.estaMuerto()) {
+      if(ticksAnimacionDanio > 0){
+        ticksAnimacionDanio -= 1
+      }
       if(self.llegoALaCasa()){
         imagenActual = "zombie_gana.png"
       } else {
@@ -75,6 +85,7 @@ class ZombieComun {
 
   method recibirDanio(cantidad) { 
     vida = (vida - cantidad).max(0)
+    ticksAnimacionDanio = 2
   }
 
   method estaMuerto() = vida == 0
