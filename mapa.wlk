@@ -1,31 +1,34 @@
 import wollok.game.*
 
-// Esqueleto de dominio: los cuerpos con TODO quedan para el equipo.
 // Las clases visuales traducen columna/fila a x/y de wollok.game.
 class Mapa {
   const property filas
   const property columnas
   const property casilleros = []
   const property zombies = []
+  var defensasActivas = []
 
   method crearCasilleros() {
     casilleros.clear()
+    // Los casilleros comparten esta lista para sincronizar también cambios directos.
+    // Reemplazarla aísla a los casilleros de la grilla anterior.
+    defensasActivas = []
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
-        casilleros.add(new Casillero(fila = f, columna = c))
+        casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = defensasActivas))
       })
     })
   }
 
   method casilleroEn(fila, columna) {
-    return casilleros.findOrElse(
-      { c => c.fila() == fila and c.columna() == columna },
-      { null }
-    )
+    if (!self.contiene(fila, columna)) { return null }
+    const indice = fila * columnas + columna
+    return if (indice < casilleros.size()) casilleros.get(indice) else null
   }
 
   method contiene(fila, columna) {
     return fila.between(0, filas - 1) and columna.between(0, columnas - 1)
+      and fila == fila.roundDown() and columna == columna.roundDown()
   }
 
   method puedeColocarDefensaEn(fila, columna) {
@@ -34,6 +37,9 @@ class Mapa {
   }
 
   method colocarDefensa(defensa, fila, columna) {
+    if (defensasActivas.contains(defensa)) {
+      self.error("La defensa ya está colocada en el mapa.")
+    }
     if (!self.puedeColocarDefensaEn(fila, columna)) {
       self.error("No se puede colocar la defensa en la posición (" + columna + ", " + fila + ")")
     }
@@ -48,7 +54,8 @@ class Mapa {
   }
 
   method defensas() {
-    return casilleros.filter({ c => c.estaOcupado() }).map({ c => c.defensa() })
+    // Devolver una copia protege la colección y permite retirar durante un recorrido.
+    return defensasActivas.copy()
   }
 
   method agregarZombie(zombie) {
@@ -89,7 +96,10 @@ class Casillero {
   const property imagen = "tile_centro.png"
   const property fila
   const property columna
-  var property defensa = null
+  var defensa = null
+  const defensasActivas = []
+
+  method defensa() = defensa
 
   method position() = game.at(columna, fila)
   method image() = imagen
@@ -97,14 +107,18 @@ class Casillero {
   method estaOcupado() = defensa != null
 
   method colocarDefensa(unaDefensa) {
-    if (self.estaOcupado()) {
+    if (self.estaOcupado() or defensasActivas.contains(unaDefensa)) {
       self.error("El casillero ya está ocupado.")
     }
     defensa = unaDefensa
     unaDefensa.position(self.position())
+    defensasActivas.add(unaDefensa)
   }
 
   method quitarDefensa() {
-    defensa = null
+    if (defensa != null) {
+      defensasActivas.remove(defensa)
+      defensa = null
+    }
   }
 }

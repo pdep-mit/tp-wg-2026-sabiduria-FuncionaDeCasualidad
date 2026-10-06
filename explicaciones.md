@@ -1,133 +1,142 @@
-# Explicaciones teóricas
+# Conurbano vs. Zombies: checkpoint 1
 
-*Completar comentando dónde se aplicaron los distintos conceptos buscados*
+## Estructura y responsabilidades
 
-# Diagramas
-
-*Incluír al menos un diagrama para comunicar su solución*
-
-## Estructura inicial de Conurbano vs. Zombies
-
-Los archivos de dominio contienen declaraciones y cuerpos vacíos con `TODO`,
-no un juego implementado. Los métodos con `TODO` no hacen nada y no devuelven
-aún los resultados indicados en los comentarios. Los métodos visuales
-`position()` e `image()` ya están implementados. Los métodos `iniciar()` de
-`motor` y `controles` ya asignan sus dependencias para conectar el punto de entrada.
-Cada clase es independiente y declara sus propios atributos y métodos.
-Todas las defensas tienen un placeholder `actualizar()`: el motor podrá enviar
-ese mensaje a cualquiera de ellas. Este polimorfismo no necesita herencia,
-una clase base ni métodos abstractos.
-
-`juego.wpgm` conserva el fondo y personaje de ejemplo, crea el mapa, el sistema
-de pesos y el generador, e inicia el motor y los controles. Un temporizador
-llama a `motor.actualizar()` cada 100 ms. Este método sigue vacío: la conexión
-no implementa todavía los ticks de dominio ni dibuja el mapa nuevo.
-
-La configuración provisional del programa usa 9 filas (reserva la fila
-superior para el fondo), 20 columnas, 100 pesos iniciales, generación de
-25 pesos cada 50 ticks y aparición de zombies cada 30 ticks. Ajustar esos
-valores con el equipo. Los intervalos solo tendrán efecto al implementar
-los métodos pendientes. El registro de teclas y clicks también sigue pendiente.
-
-| Archivo | Responsabilidad y declaraciones |
+| Archivo | Responsabilidad |
 | --- | --- |
-| `mapa.wlk` | `Mapa` y `Casillero`: grilla, ocupación, defensas y zombies. |
-| `defensas.wlk` | Vendecursos, Verdulero y Panadero como clases independientes con sus métodos visuales. |
-| `zombies.wlk` | `ZombieComun`, con sus métodos visuales. |
-| `pesos.wlk` | `SistemaDePesos`: saldo, generación automática y gastos. |
-| `motor.wlk` | Objeto `motor` y `GeneradorDeZombies`: partida, ticks, apariciones, recargas y eliminación de muertos. |
-| `controles.wlk` | Objeto `controles`: selección con 1/2/3 y pedido de colocación. |
+| `mapa.wlk` | Grilla 5 × 9, ocupación, colección de defensas activas y zombies por fila. |
+| `defensas.wlk` | Vendecursos, Verdulero y Panadero con vida, costo y comportamiento propio. |
+| `zombies.wlk` | Movimiento por fila, detección de defensas, mordiscos, daño y llegada a la casa. |
+| `pesos.wlk` | Saldo, generación automática, cobros e indicador visual. |
+| `motor.wlk` | Ticks, recargas por tipo, apariciones, retiro de muertos y fin de partida. |
+| `controles.wlk` | Selección 1/2/3, cursor, Enter e indicador de selección y recarga. |
+| `fabricaDeDefensas.wlk` | Construcción de defensas y valores de balance. |
+| `inicio.wlk` | Crea el primer zombie de la demo. |
+| `juego.wpgm` | Configura la partida, los indicadores y el temporizador de 100 ms. |
 
 ```mermaid
 classDiagram
-  controles --> motor : selecciona y pide colocar
+  controles --> motor : pide colocar
+  controles --> FabricaDeDefensas : pide una instancia nueva
+  FabricaDeDefensas --> Vendecursos : crea
+  FabricaDeDefensas --> Verdulero : crea
+  FabricaDeDefensas --> Panadero : crea
   motor --> Mapa : coordina la partida
   motor --> SistemaDePesos : actualiza y cobra
   motor --> GeneradorDeZombies : actualiza
+  motor --> RecargaDeDefensa : controla tiempos
   Mapa "1" *-- "muchos" Casillero : grilla
-  Casillero --> Vendecursos : puede contener uno
-  Casillero --> Verdulero : puede contener uno
-  Casillero --> Panadero : puede contener uno
-  motor --> Vendecursos : envia actualizar()
-  motor --> Verdulero : envia actualizar()
-  motor --> Panadero : envia actualizar()
-  Mapa --> ZombieComun : registra enemigos
-  Vendecursos --> SistemaDePesos : genera pesos
-  Verdulero --> Mapa : consulta objetivos
-  ZombieComun --> Mapa : consulta defensas
+  Casillero --> Vendecursos : puede contener
+  Casillero --> Verdulero : puede contener
+  Casillero --> Panadero : puede contener
+  motor --> Vendecursos : actualizar()
+  motor --> Verdulero : actualizar()
+  motor --> Panadero : actualizar()
+  Mapa --> ZombieComun : registra
+  Vendecursos --> SistemaDePesos : genera ingresos
+  Verdulero --> Mapa : busca objetivos
+  ZombieComun --> Mapa : detecta defensas
   GeneradorDeZombies --> Mapa : agrega zombies
 ```
 
-Las flechas señalan dependencias previstas y la composición representa la
-grilla. Cada casillero contiene como máximo una defensa en total, de cualquiera
-de esas clases. No hay relaciones de herencia. Los cuerpos que concretan las
-dependencias siguen pendientes.
+## Polimorfismo sin herencia
 
-### Contratos para completar el checkpoint 1
+El motor recorre `mapa.defensas()` y envía el mismo mensaje `actualizar()` a
+cada objeto. No pregunta su clase ni elige su comportamiento con condicionales:
 
-- Usar `fila` y `columna` como coordenadas lógicas. Los métodos `position()`
-  usan `game.at(columna, fila)`. Falta acordar el sentido de avance y el
-  límite que representa la casa.
-- Al construir objetos, suministrar los atributos sin valor inicial. Definir
-  dimensiones, vida, costos, daño, velocidad, saldo inicial e intervalos con el
-  equipo; no hay valores de balance inventados en el esqueleto.
-- `Mapa` almacena defensas a través de sus casilleros; `defensas()` deberá
-  devolverlas. `zombies` es la colección de enemigos presentes.
-- `motor.colocarDefensa(...)` coordina la validación de límites, ocupación,
-  saldo y recarga. Si se rechaza la colocación, no debe ocupar ni cobrar.
-  `Casillero` también debe impedir que se reemplace una defensa existente.
-- Separar la recarga para volver a colocar un tipo (`intervaloDeColocacion`)
-  del tiempo entre acciones de una instancia (`intervaloDeAccion`).
-- El motor enviará `actualizar()` a todas las defensas sin preguntar su tipo.
-  Vendecursos genera pesos periódicamente, Verdulero ataca su línea y Panadero
-  funciona como barrera de alta vida. El comportamiento concreto queda pendiente.
-- `defensaEn(...)` y `defensaAlcanzada()` deberán devolver una defensa o `null`;
-  las consultas `estaMuerto()`, `estaMuerta()`, `alcanzaPara(...)`,
-  `contiene(...)` y `puedeColocarDefensaEn(...)` deberán devolver booleanos.
-- Usar un tick como la unidad de actualización de los intervalos declarados.
-  Su temporizador ya está registrado en `juego.wpgm`. El motor deberá
-  retirar muertos, procesar apariciones y comprobar la llegada a la casa.
-- `controles` creará una instancia nueva por colocación. Selección propuesta
-  por los requisitos: 1 Vendecursos, 2 Verdulero, 3 Panadero.
+- Vendecursos genera 25 pesos cada 10 ticks, salvo que esté bloqueado o muerto.
+- Verdulero busca al zombie vivo más cercano delante suyo en la misma fila y
+  le hace 20 de daño cada 10 ticks. No necesita proyectiles para aplicar daño.
+- Panadero es una barrera pasiva de 300 de vida; recibe mordiscos sin atacar.
+  Su `actualizar()` sólo avanza la animación del golpe; no tiene intervalo de acción.
+- Las tres defensas usan `AnimacionDeDefensa`: cada ataque, venta o golpe inicia
+  una secuencia que avanza un cuadro por tick (100 ms) y vuelve a la imagen quieta.
+  La animación no depende de que ocurra otra acción; un nuevo evento la reinicia.
 
-### Parte visual en las mismas clases
+Las tres clases también responden a `recibirDanio()`, `estaMuerta()`, `costo()`,
+`tipo()`, `intervaloDeColocacion()`, `position()` e `image()`. El motor utiliza
+el identificador `tipo()` únicamente para compartir la recarga de colocación
+entre todas las instancias de una misma defensa.
 
-Vendecursos, Verdulero, Panadero, ZombieComun y Casillero responden a
-`position()` e `image()`. Una instancia se puede registrar con
-`game.addVisual(unaInstancia)` y retirar con `game.removeVisual(unaInstancia)`.
-El motor deberá coordinar ese registro con la colocación y eliminación en el
-mapa, usando la misma instancia para el dominio y la pantalla.
+## Ciclo de un tick
 
-Cambiar `fila` o `columna` modifica la posición que devuelve `position()`;
-no se almacena una segunda posición visual. Cada clase declara estos métodos
-directamente, sin herencia.
+1. Retirar muertos y comprobar si un zombie ya llegó a la casa.
+2. Si sigue la partida, actualizar recargas y generación automática de pesos.
+3. `actualizarDefensas()` envía el mismo mensaje a todas las defensas.
+4. Retirar muertos: un zombie abatido no puede morder en ese tick.
+5. `actualizarZombies()` actualiza enemigos; luego se retiran defensas destruidas.
+6. Comprobar derrota y, si sigue la partida, procesar nuevas apariciones.
 
-ZombieComun utiliza `zombie1.png`; su propiedad `imagen` puede cambiar a
-`zombie2.png` para una futura animación. Las defensas usan `alien_azul.png`
-como placeholder y permiten indicar `imagen` al construirlas. Casillero usa
-`tile_centro.png`; el fondo existente ya dibuja el terreno, por lo que no es
-necesario agregar también cada casillero a la pantalla.
+Cada 50 ticks el sistema agrega 25 pesos. El generador crea un zombie cada
+30 ticks en la última columna y una fila aleatoria válida. El zombie inicial
+se agrega aparte para que la demo comience con un enemigo visible.
 
-El objeto `zombie` de `personajes.wlk` sigue siendo el ejemplo visual actual.
-Reemplazarlo por una instancia de ZombieComun al implementar la creación de
-enemigos. Agregar los métodos visuales a las clases no implementa movimiento,
-combate, animación ni generación de enemigos.
+## Movimiento y combate
 
-### Tests pendientes para Lucho
+El mapa jugable tiene 5 filas y 9 columnas (45 casilleros). La sexta fila
+visual está reservada para los indicadores. Las celdas visuales son de 100
+píxeles, acordes a los sprites existentes.
 
-El único test ejecutable sigue siendo el ejemplo original. No hay tests de
-comportamiento nuevo porque los placeholders aún no lo implementan.
+Las coordenadas lógicas son fila/columna; las visuales son `game.at(columna,
+fila)`. El zombie usa `casillasPorPaso` para la distancia y `ticksEntrePasos` para
+el intervalo. Avanza hacia la izquierda una casilla entera cada 30 ticks
+(3 segundos). Conserva la velocidad media anterior de 0.2 casillas cada
+6 ticks, usando posiciones enteras que el renderer puede dibujar sin
+redondeos de movimiento. Antes de
+moverse, revisa todo el tramo del paso y se detiene exactamente en la primera
+defensa viva que encuentra en su fila. Esto evita atravesar una casilla por
+usar posiciones decimales, incluso si un paso cruza varias casillas.
 
-- Mapa/casillero: colocar una defensa y rechazar una segunda en la misma casilla.
-- Pesos/motor: generación por intervalo, cobro de una colocación válida y
-  conservación del saldo ante falta de fondos, casilla ocupada o recarga pendiente.
-- Defensas: envío del mismo mensaje `actualizar()` a Vendecursos, Verdulero y
-  Panadero, comprobando generación de pesos, ataque en línea y resistencia.
-- Zombie común: avance en una fila, ataque al alcanzar una defensa, recepción
-  de daño y eliminación al llegar a cero de vida.
-- Integración: ticks que coordinan los objetos, aparición periódica y
-  selección de defensas con 1/2/3.
+Al detenerse en una defensa, hace 10 de daño cada 2 ticks y no avanza hasta que
+sea destruida. Los muertos se retiran del mapa y de la pantalla; al destruir
+una defensa, su casillero queda libre. La casa está en la columna 1: alcanzar
+o cruzar ese límite detiene la partida, sus ingresos y nuevas colocaciones.
 
-Validar la estructura con `wollok lint -p ./` y ejecutar los tests con
-`wollok test -p ./`. Los atributos privados sin usar generan advertencias
-esperables hasta que se completen los cuerpos.
+## Colocación y pantalla
+
+Las teclas 1/2/3 seleccionan Vendecursos/Verdulero/Panadero; las flechas mueven
+el cursor y Enter coloca una instancia nueva. Se valida partida activa,
+casillero libre, límites, saldo y recarga mediante `motor.puedeColocarDefensa()`.
+La fábrica concentra vida, costo e intervalos de cada defensa; los controles
+solo solicitan la instancia del tipo seleccionado. Un rechazo no cobra, no ocupa ni
+inicia una recarga. La selección se conserva.
+
+Los costos son 25/10/5 pesos. Las recargas por tipo son 5/5/30 ticks; empiezan
+solo tras una colocación válida y continúan aunque la defensa sea destruida.
+La franja superior muestra pesos, estado de partida y selección/recarga.
+
+## Verificación y alcance
+
+Ejecutar `wollok test -p ./` y `wollok lint -p ./`. Los tests cubren ocupación,
+controles por teclado, economía, ventas, objetivos del Verdulero, movimiento,
+combate, recargas, retiro de muertos, derrota y apariciones. La integración
+del motor comprueba efectos distintos al actualizar las tres defensas.
+
+La verificación local del 6 de octubre de 2026 pasó los 91 tests; el lint no
+informó errores ni advertencias. También se comprobó en el navegador la
+colocación por teclado de las tres defensas, los ingresos, las apariciones y
+los indicadores. El fin de partida y el combate se verifican con tests de
+integración. Los indicadores están en la fila superior y el tamaño de celda evita que
+los sprites de las filas jugables los tapen. No se retiran y agregan de nuevo
+en cada tick.
+
+El checkpoint no implementa Carnicero, Aguatero, fusiones, Migas ni zombies
+especiales. El bloqueo del Vendecursos está disponible para una futura
+integración con el inspector. Los efectos temporales se incorporarán cuando
+se implementen las fusiones. No hay condición de victoria: se juega hasta la derrota.
+
+
+## Colección activa y consultas del mapa
+
+El mapa conserva una colección privada de defensas activas, compartida con
+los casilleros de su grilla. Colocar o quitar desde el mapa o directamente
+desde un casillero actualiza esa misma colección. `defensas()` devuelve una
+copia para impedir modificaciones externas y permitir retiros seguros al
+recorrerla. Una instancia no puede ocupar dos casilleros simultáneamente.
+Recrear la grilla reemplaza la colección: un casillero antiguo no altera el
+estado del mapa nuevo.
+
+`casilleroEn(fila, columna)` accede directamente al índice
+`fila * columnas + columna`, después de validar límites y coordenadas
+enteras. Consultar una defensa o listar las defensas activas no requiere
+recorrer todos los casilleros.

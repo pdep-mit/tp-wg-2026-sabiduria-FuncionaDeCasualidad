@@ -9,8 +9,9 @@ import zombies.*
 
 program ConurbanoVsZombies {
 	game.title("Grupo: FuncionaDeCasualidad | Conurbano vs. Zombies")
-	game.width(20)
-	game.height(10)
+	game.width(9)
+	game.height(6) // Cinco filas jugables y una franja de indicadores.
+	game.cellSize(100)
 	
 	fondo.iniciar()
 
@@ -23,11 +24,17 @@ program ConurbanoVsZombies {
 	)
 	const generador = new GeneradorDeZombies(
 		mapa = mapaDeJuego,
-		intervaloDeAparicion = 30
+		intervaloDeAparicion = 100
 	)
 
 	motor.iniciar(mapaDeJuego, pesosDeJuego, generador)
 	controles.iniciar(motor)
+	const indicadores = [
+		new IndicadorDePesos(position = game.at(1, 5), sistemaDePesos = pesosDeJuego),
+		new IndicadorDePartida(position = game.at(4, 5), motorDeJuego = motor),
+		new IndicadorDeSeleccion(position = game.at(7, 5), controlesDeJuego = controles)
+	]
+	indicadores.forEach({ indicador => game.addVisual(indicador) })
 
 	game.onTick(milisegundosPorTick, "actualizarMotor", { => motor.actualizar() })
 	

@@ -1,6 +1,6 @@
-# Wollok Game: Título de juego
+# Conurbano vs. Zombies
 
-**Grupo:** Nombre de Grupo
+**Grupo:** FuncionaDeCasualidad
 
 **Integrantes:**
 - Nombre y Apellido
@@ -22,17 +22,52 @@ Recuerden que para cada checkpoint hay [expectativas mínimas](https://docs.goog
 
 # Cómo jugar
 
-La estructura de dominio de **Conurbano vs. Zombies** está declarada como
-placeholders, con la lógica pendiente. Ver la [guía de estructura y contratos](explicaciones.md#estructura-inicial-de-conurbano-vs-zombies)
-para completar los métodos y repartir el trabajo del checkpoint 1.
+Juego de defensa por líneas desarrollado en Wollok. El checkpoint 1 integra el
+mapa de 5 filas × 9 columnas, las tres defensas, zombies comunes, pesos,
+recargas y derrota. Hay 45 casilleros jugables y una franja superior de estado. Ver la
+[explicación del dominio](explicaciones.md).
+
+Con Wollok instalado, ejecutar `wollok run juego.ConurbanoVsZombies -p ./`.
 
 ## Objetivo
 
-TODO
+Evitá que los zombies, que avanzan de derecha a izquierda, alcancen la columna 1.
+El Vendecursos genera ingresos, el Verdulero ataca al zombie vivo más cercano
+delante suyo en su fila y el Panadero absorbe mordiscos. Conviene colocar
+defensas desde la columna 2 hacia la derecha. Al llegar un zombie a la casa,
+aparece el mensaje de derrota y la partida se detiene. Para volver a jugar,
+ejecutar nuevamente el programa.
 
 ## Controles
 
-TODO
+- `1`: seleccionar Vendecursos (25 pesos).
+- `2`: seleccionar Verdulero (10 pesos).
+- `3`: seleccionar Panadero (5 pesos).
+- Flechas: mover el cursor amarillo `+`, que comienza en la casilla `(0, 0)`.
+- `Enter`: colocar la defensa seleccionada en la casilla del cursor.
+
+La colocación requiere una casilla libre y pesos suficientes. Si no se puede
+colocar, no se descuenta dinero. La selección se conserva para colocar más
+defensas. La recarga es independiente por tipo: 5 ticks para Vendecursos y
+Verdulero, 30 para Panadero. La franja superior muestra saldo, estado de la
+partida y selección con su estado de recarga.
+
+## Economía y tiempos
+
+Cada tick dura 100 ms. Se empieza con 100 pesos y se reciben 25 cada 50 ticks.
+Cada Vendecursos agrega 25 pesos cada 10 ticks. El Verdulero hace 20 de daño
+cada 10 ticks; el Panadero tiene 300 de vida. Aparecen zombies comunes cada
+30 ticks en una fila aleatoria, además del zombie inicial en la fila central.
+El zombie avanza una casilla entera cada 30 ticks (3 segundos), se detiene
+frente a una defensa y continúa cuando esta es destruida.
+
+## Verificación
+
+- `wollok test -p ./`: tests de dominio, controles e integración.
+- `wollok lint -p ./`: validación estática.
+
+Carnicero, Aguatero, fusiones, efectos temporales y zombies especiales quedan
+para etapas posteriores.
 
 # Explicaciones
 

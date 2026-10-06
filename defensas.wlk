@@ -5,10 +5,8 @@ import wollok.game.*
 // No hay herencia ni clase base: el polimorfismo surge de que todas
 // entienden el mismo protocolo.
 
-// ──────────────────────────────────────────────────────────────────
 // Verdulero: lanza verduras hacia los enemigos en su misma fila.
 // Alcance de toda la línea, daño básico, costo normal.
-// ──────────────────────────────────────────────────────────────────
 class Verdulero {
   var property position
   var property vida
@@ -18,83 +16,75 @@ class Verdulero {
   const property intervaloDeColocacion
   const property intervaloDeAccion
   var ticksDesdeUltimaAccion = 0
-  var imagenActual = "verdulero_quieto.png"
+  const animacion = new AnimacionDeDefensa(
+    imagenQuieta = "verdulero_quieto.png",
+    cuadros = ["verdulero_ataque_0.png", "verdulero_ataque_1.png", "verdulero_ataque_2.png"]
+  )
 
-  method image() = imagenActual
+  method image() = animacion.image()
+  method tipo() = "verdulero"
 
-  // ── Vida y resistencia ──
   method recibirDanio(cantidad) {
     vida = vida - cantidad
   }
 
   method estaMuerta() = vida <= 0
 
-  // ── Intervalo de acción ──
   method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion
 
-  // ── Actualización por tick ──
-  // El motor envía este mensaje cada tick. El Verdulero busca un
-  // objetivo en su fila y lo ataca si puede actuar.
   method actualizar() {
+    if (self.estaMuerta()) { return }
+
+    animacion.actualizar()
     ticksDesdeUltimaAccion = ticksDesdeUltimaAccion + 1
-    if (self.puedeActuar()) {
-      const objetivo = self.buscarObjetivo()
-      if (objetivo != null) {
-        self.atacar(objetivo)
-        ticksDesdeUltimaAccion = 0
-      }
-    }
+    if (!self.puedeActuar()) { return }
+
+    const objetivo = self.buscarObjetivo()
+    if (objetivo == null) { return }
+
+    self.atacar(objetivo)
+    ticksDesdeUltimaAccion = 0
+    return
   }
 
-  // ── Búsqueda de objetivo ──
-  // Busca un zombie en la misma fila. Depende de que el mapa
-  // implemente zombiesEnLinea(fila).
+  // Prioriza al zombie vivo más cercano delante de la defensa.
   method buscarObjetivo() {
     const zombiesEnMiFila = mapa.zombiesEnLinea(position.y())
+      .filter({ zombie => !zombie.estaMuerto() and zombie.position().x() >= position.x() })
+      .sortedBy({ primero, segundo => primero.position().x() < segundo.position().x() })
     if (zombiesEnMiFila.isEmpty()) {
       return null
     }
     return zombiesEnMiFila.first()
   }
 
-  // ── Ataque ──
   method atacar(zombie) {
     self.animarAtaque()
     zombie.recibirDanio(danio)
   }
 
-  // Cicla entre los frames de ataque para feedback visual.
   method animarAtaque() {
-    if (imagenActual == "verdulero_quieto.png") {
-      imagenActual = "verdulero_ataque_0.png"
-    } else if (imagenActual == "verdulero_ataque_0.png") {
-      imagenActual = "verdulero_ataque_1.png"
-    } else if (imagenActual == "verdulero_ataque_1.png") {
-      imagenActual = "verdulero_ataque_2.png"
-    } else {
-      imagenActual = "verdulero_quieto.png"
-    }
+    animacion.iniciar()
   }
 }
 
-// ──────────────────────────────────────────────────────────────────
 // Panadero: barrera defensiva de alta vida. Deja un canasto de
 // panes viejos que aguanta muchos golpes. Costo barato, recarga alta.
 // No ataca: su función es absorber daño.
-// ──────────────────────────────────────────────────────────────────
 class Panadero {
   var property position
   var property vida
   const property costo
   const property mapa
   const property intervaloDeColocacion
-  const property intervaloDeAccion
-  var ticksDesdeUltimaAccion = 0
-  var imagenActual = "panadero_quieto.png"
+  const animacion = new AnimacionDeDefensa(
+    imagenQuieta = "panadero_quieto.png",
+    cuadros = ["panadero_brazos_cerrados.png"]
+  )
 
-  method image() = imagenActual
+  method image() = animacion.image()
+  method tipo() = "panadero"
 
-  // ── Vida y resistencia ──
   method recibirDanio(cantidad) {
     vida = vida - cantidad
     // Feedback visual: cambia de pose al recibir daño.
@@ -103,31 +93,21 @@ class Panadero {
 
   method estaMuerta() = vida <= 0
 
-  // ── Intervalo de acción ──
-  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion
-
-  // ── Actualización por tick ──
-  // El Panadero es una barrera pasiva. Su actualizar() solo
-  // incrementa el contador de ticks. No necesita buscar objetivos.
+  // Sigue siendo una barrera pasiva; el tick sólo actualiza su imagen.
   method actualizar() {
-    ticksDesdeUltimaAccion = ticksDesdeUltimaAccion + 1
+    if (self.estaMuerta()) { return }
+    animacion.actualizar()
+    return
   }
 
-  // Alterna imagen al recibir golpes para dar feedback visual.
   method animarDanio() {
-    if (imagenActual == "panadero_quieto.png") {
-      imagenActual = "panadero_brazos_cerrados.png"
-    } else {
-      imagenActual = "panadero_quieto.png"
-    }
+    animacion.iniciar()
   }
 }
 
-// ──────────────────────────────────────────────────────────────────
 // Vendecursos: genera pesos periódicamente vendiendo cursos.
 // No ataca directamente. Puede ser bloqueado por un zombie inspector
 // (para una futura iteración).
-// ──────────────────────────────────────────────────────────────────
 class Vendecursos {
   var property position
   var property vida
@@ -139,21 +119,22 @@ class Vendecursos {
   const property sistemaDePesos
   const property pesosPorVenta
   var property bloqueado = false
-  var imagenActual = "vendecursos_quieto.png"
+  const animacion = new AnimacionDeDefensa(
+    imagenQuieta = "vendecursos_quieto.png",
+    cuadros = ["vendecursos_salto_0.png", "vendecursos_salto_1.png"]
+  )
 
-  method image() = imagenActual
+  method image() = animacion.image()
+  method tipo() = "vendecursos"
 
-  // ── Vida y resistencia ──
   method recibirDanio(cantidad) {
     vida = vida - cantidad
   }
 
   method estaMuerta() = vida <= 0
 
-  // ── Intervalo de acción ──
   method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion
 
-  // ── Bloqueo por inspector ──
   // Un zombie inspector puede bloquear al vendecursos para que
   // no genere pesos hasta que el inspector muera.
   method estaBloqueado() = bloqueado
@@ -161,31 +142,47 @@ class Vendecursos {
   method bloquear() { bloqueado = true }
   method desbloquear() { bloqueado = false }
 
-  // ── Actualización por tick ──
-  // El motor envía este mensaje cada tick. Si puede actuar y no
-  // está bloqueado, genera pesos.
   method actualizar() {
+    if (self.estaMuerta()) { return }
+
+    animacion.actualizar()
     ticksDesdeUltimaAccion = ticksDesdeUltimaAccion + 1
-    if (self.puedeActuar() && !self.estaBloqueado()) {
-      self.generarPesos()
-      ticksDesdeUltimaAccion = 0
-      self.animarVenta()
-    }
+    if (!self.puedeActuar() or self.estaBloqueado()) { return }
+
+    self.generarPesos()
+    ticksDesdeUltimaAccion = 0
+    self.animarVenta()
+    return
   }
 
-  // ── Generación de pesos ──
   method generarPesos() {
     sistemaDePesos.agregarPesos(pesosPorVenta)
   }
 
-  // Cicla entre los frames de salto al vender.
   method animarVenta() {
-    if (imagenActual == "vendecursos_quieto.png") {
-      imagenActual = "vendecursos_salto_0.png"
-    } else if (imagenActual == "vendecursos_salto_0.png") {
-      imagenActual = "vendecursos_salto_1.png"
-    } else {
-      imagenActual = "vendecursos_quieto.png"
+    animacion.iniciar()
+  }
+}
+
+// Cada acción inicia una secuencia; cada tick muestra el siguiente cuadro.
+class AnimacionDeDefensa {
+  const imagenQuieta
+  const cuadros
+  var indiceDeCuadro = -1
+
+  method image() = if (indiceDeCuadro < 0) imagenQuieta else cuadros.get(indiceDeCuadro)
+
+  method iniciar() {
+    indiceDeCuadro = 0
+  }
+
+  method actualizar() {
+    if (indiceDeCuadro < 0) { return }
+
+    indiceDeCuadro += 1
+    if (indiceDeCuadro >= cuadros.size()) {
+      indiceDeCuadro = -1
     }
+    return
   }
 }
