@@ -15,7 +15,9 @@ class Mapa {
   method colocarDefensa(defensa, fila, columna) { /* TODO: ocupar una única casilla. */ }
   method quitarDefensa(defensa) { /* TODO: liberar su casilla. */ }
   method defensas() { /* TODO: devolver las defensas de los casilleros. */ }
-  method agregarZombie(zombie) { /* TODO: incorporar un enemigo. */ }
+  method agregarZombie(zombie) {
+    zombies.add(zombie)
+  }
   method quitarZombie(zombie) { /* TODO: retirar un enemigo muerto. */ }
   method zombiesEnLinea(fila) {
     return zombies.filter({ zombie => zombie.position().y() == fila })

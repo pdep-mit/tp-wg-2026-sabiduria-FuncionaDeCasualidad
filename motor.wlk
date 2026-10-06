@@ -1,4 +1,8 @@
 // juego.wpgm configura las dependencias y registra el temporizador de actualización.
+import wollok.game.*
+import zombies.*
+import mapa.*
+import pesos.*
 object motor {
   var mapa = null
   var sistemaDePesos = null
@@ -14,7 +18,11 @@ object motor {
     mapa.crearCasilleros()
     enCurso = true
   }
-  method actualizar() { /* TODO: actualizar pesos, generador, defensas, zombies y efectos. */ }
+  method actualizar() {
+    if (enCurso) {
+      mapa.zombies().forEach({ zombie => zombie.actualizar()})
+    }
+  }
   method colocarDefensa(defensa, fila, columna) { /* TODO: validar casilla, saldo y recarga antes de colocar y cobrar. */ }
   method puedeColocarTipoDeDefensa(tipoDeDefensa) { /* TODO: consultar la recarga de colocación de ese tipo. */ }
   method actualizarRecargas() { /* TODO: actualizar los tiempos de colocación por tick. */ }

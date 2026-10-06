@@ -4,8 +4,10 @@ import zombies.*
 import inicio.*
 describe "grupo de tests" {
 
-  test "ZombieDePrueba comienza en la posicion (18,7)" {
-    assert.equals(game.at(18,7), configuraciones.zombieDePrueba.position())
+  test "Un zombie esta muerto cuando su vida llego a 0" {
+    const unZombie = new ZombieComun(position = game.at(18, 7), vida = 100)
+    unZombie.recibirDanio(100)
+    assert.that(unZombie.estaMuerto())
   }
 
 }

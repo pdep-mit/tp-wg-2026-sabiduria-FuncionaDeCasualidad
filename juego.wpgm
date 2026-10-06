@@ -5,6 +5,7 @@ import mapa.*
 import pesos.*
 import motor.*
 import controles.*
+import zombies.*
 
 program ConurbanoVsZombies {
 	game.title("Grupo: FuncionaDeCasualidad | Conurbano vs. Zombies")
@@ -13,7 +14,7 @@ program ConurbanoVsZombies {
 	
 	fondo.iniciar()
 
-	/*const milisegundosPorTick = 100
+	const milisegundosPorTick = 100
 	const mapaDeJuego = new Mapa(filas = game.height() - 1, columnas = game.width())
 	const pesosDeJuego = new SistemaDePesos(
 		pesosDisponibles = 100,
@@ -27,10 +28,10 @@ program ConurbanoVsZombies {
 
 	motor.iniciar(mapaDeJuego, pesosDeJuego, generador)
 	controles.iniciar(motor)
-	game.onTick(milisegundosPorTick, "actualizarMotor", { => motor.actualizar() })
-	*/
-	
-	configuraciones.iniciar()
 
+	game.onTick(milisegundosPorTick, "actualizarMotor", { => motor.actualizar() })
+	
+	configuraciones.iniciarZombie(mapaDeJuego)
+	
 	game.start()
 }
