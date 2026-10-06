@@ -1,0 +1,188 @@
+import mapa.*
+import defensas.*
+import zombies.*
+
+describe "Mapa - creación y límites" {
+  const mapa = new Mapa(filas = 9, columnas = 20)
+
+  test "inicialmente casilleros está vacío hasta llamar a crearCasilleros" {
+    assert.equals(0, mapa.casilleros().size())
+    mapa.crearCasilleros()
+    assert.equals(180, mapa.casilleros().size())
+  }
+
+  test "contiene verifica correctamente posiciones válidas e inválidas" {
+    assert.that(mapa.contiene(0, 0))
+    assert.that(mapa.contiene(8, 19))
+    assert.notThat(mapa.contiene(-1, 5))
+    assert.notThat(mapa.contiene(9, 5))
+    assert.notThat(mapa.contiene(3, -1))
+    assert.notThat(mapa.contiene(3, 20))
+  }
+
+  test "casilleroEn devuelve el casillero correspondiente a una coordenada" {
+    mapa.crearCasilleros()
+    const casillero = mapa.casilleroEn(2, 4)
+    assert.notEquals(null, casillero)
+    assert.equals(2, casillero.fila())
+    assert.equals(4, casillero.columna())
+  }
+
+  test "casilleroEn devuelve null para coordenadas fuera del mapa" {
+    mapa.crearCasilleros()
+    assert.equals(null, mapa.casilleroEn(15, 30))
+  }
+}
+
+describe "Casillero - ocupación y colocación" {
+  const casillero = new Casillero(fila = 3, columna = 5)
+  const panadero = new Panadero(
+    position = game.at(0, 0),
+    vida = 300,
+    costo = 5,
+    mapa = new Mapa(filas = 9, columnas = 20),
+    intervaloDeColocacion = 30,
+    intervaloDeAccion = 1
+  )
+
+  test "un casillero nuevo no está ocupado y su posición corresponde a x=columna, y=fila" {
+    assert.notThat(casillero.estaOcupado())
+    assert.equals(null, casillero.defensa())
+    assert.equals(game.at(5, 3), casillero.position())
+  }
+
+  test "colocar una defensa ocupa el casillero y actualiza la posición de la defensa" {
+    casillero.colocarDefensa(panadero)
+    assert.that(casillero.estaOcupado())
+    assert.equals(panadero, casillero.defensa())
+    assert.equals(game.at(5, 3), panadero.position())
+  }
+
+  test "rechazar colocar una segunda defensa en el mismo casillero" {
+    casillero.colocarDefensa(panadero)
+    const otraDefensa = new Panadero(
+      position = game.at(0, 0),
+      vida = 100,
+      costo = 5,
+      mapa = new Mapa(filas = 9, columnas = 20),
+      intervaloDeColocacion = 30,
+      intervaloDeAccion = 1
+    )
+    assert.throwsException({ casillero.colocarDefensa(otraDefensa) })
+  }
+
+  test "quitar defensa libera el casillero" {
+    casillero.colocarDefensa(panadero)
+    casillero.quitarDefensa()
+    assert.notThat(casillero.estaOcupado())
+    assert.equals(null, casillero.defensa())
+  }
+}
+
+describe "Mapa - colocación y gestión de defensas" {
+  const mapa = new Mapa(filas = 9, columnas = 20)
+  const verdulero = new Verdulero(
+    position = game.at(0, 0),
+    vida = 50,
+    costo = 10,
+    danio = 20,
+    mapa = mapa,
+    intervaloDeColocacion = 5,
+    intervaloDeAccion = 10
+  )
+
+  method initialize() {
+    mapa.crearCasilleros()
+  }
+
+  test "puedeColocarDefensaEn es verdadero en casillero libre y falso si está ocupado o fuera de límites" {
+    assert.that(mapa.puedeColocarDefensaEn(2, 3))
+    assert.notThat(mapa.puedeColocarDefensaEn(-1, 3))
+    assert.notThat(mapa.puedeColocarDefensaEn(2, 25))
+
+    mapa.colocarDefensa(verdulero, 2, 3)
+    assert.notThat(mapa.puedeColocarDefensaEn(2, 3))
+  }
+
+  test "colocarDefensa ubica la defensa y se refleja en defensas() y defensaEn()" {
+    mapa.colocarDefensa(verdulero, 2, 3)
+    assert.equals([verdulero], mapa.defensas())
+    assert.equals(verdulero, mapa.defensaEn(2, 3))
+    assert.equals(null, mapa.defensaEn(2, 4))
+    assert.equals(null, mapa.defensaEn(10, 10))
+  }
+
+  test "colocarDefensa lanza error si la casilla ya está ocupada o fuera del mapa" {
+    mapa.colocarDefensa(verdulero, 2, 3)
+    const otraDefensa = new Panadero(
+      position = game.at(0, 0),
+      vida = 100,
+      costo = 5,
+      mapa = mapa,
+      intervaloDeColocacion = 30,
+      intervaloDeAccion = 1
+    )
+    assert.throwsException({ mapa.colocarDefensa(otraDefensa, 2, 3) })
+    assert.throwsException({ mapa.colocarDefensa(otraDefensa, 10, 10) })
+  }
+
+  test "quitarDefensa retira la defensa del casillero correspondiente" {
+    mapa.colocarDefensa(verdulero, 2, 3)
+    mapa.quitarDefensa(verdulero)
+    assert.equals([], mapa.defensas())
+    assert.equals(null, mapa.defensaEn(2, 3))
+    assert.that(mapa.puedeColocarDefensaEn(2, 3))
+  }
+}
+
+describe "Mapa - interacción con zombies" {
+  const mapa = new Mapa(filas = 9, columnas = 20)
+
+  method initialize() {
+    mapa.crearCasilleros()
+  }
+
+  test "agregar y quitar zombies del mapa" {
+    const zombie1 = new ZombieComun(position = game.at(18, 2), mapa = mapa)
+    mapa.agregarZombie(zombie1)
+    assert.equals([zombie1], mapa.zombies())
+
+    mapa.quitarZombie(zombie1)
+    assert.equals([], mapa.zombies())
+  }
+
+  test "zombiesEnLinea filtra enemigos en la misma fila" {
+    const zombieEnFila2 = new ZombieComun(position = game.at(15, 2), mapa = mapa)
+    const zombieEnFila4 = new ZombieComun(position = game.at(12, 4), mapa = mapa)
+    mapa.agregarZombie(zombieEnFila2)
+    mapa.agregarZombie(zombieEnFila4)
+
+    assert.equals([zombieEnFila2], mapa.zombiesEnLinea(2))
+    assert.equals([zombieEnFila4], mapa.zombiesEnLinea(4))
+    assert.equals([], mapa.zombiesEnLinea(0))
+  }
+
+  test "zombiesEnRango busca enemigos en la misma fila dentro del alcance hacia adelante" {
+    const zombieCerca = new ZombieComun(position = game.at(5, 3), mapa = mapa)
+    const zombieLejos = new ZombieComun(position = game.at(15, 3), mapa = mapa)
+    const zombieOtraFila = new ZombieComun(position = game.at(5, 4), mapa = mapa)
+
+    mapa.agregarZombie(zombieCerca)
+    mapa.agregarZombie(zombieLejos)
+    mapa.agregarZombie(zombieOtraFila)
+
+    // Defensa en columna 3, alcance de 4 casillas (cubre columnas 3 a 7)
+    const zombiesAlcanzados = mapa.zombiesEnRango(3, 3, 4)
+    assert.equals([zombieCerca], zombiesAlcanzados)
+  }
+
+  test "algunZombieLlegoALaCasa detecta si un enemigo llegó a x = 1" {
+    const zombieLejos = new ZombieComun(position = game.at(10, 2), mapa = mapa)
+    mapa.agregarZombie(zombieLejos)
+    assert.notThat(mapa.algunZombieLlegoALaCasa())
+
+    const zombieEnLaCasa = new ZombieComun(position = game.at(1, 2), mapa = mapa)
+    mapa.agregarZombie(zombieEnLaCasa)
+    assert.that(mapa.algunZombieLlegoALaCasa())
+  }
+}
