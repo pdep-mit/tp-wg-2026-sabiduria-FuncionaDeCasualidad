@@ -2,10 +2,12 @@
 import defensas.*
 import zombies.*
 import inicio.*
+import mapa.*
 describe "grupo de tests" {
 
   test "Un zombie esta muerto cuando su vida llego a 0" {
-    const unZombie = new ZombieComun(position = game.at(18, 7), vida = 100)
+    const unMapa = new Mapa(filas = 9, columnas = 20)
+    const unZombie = new ZombieComun(position = game.at(18, 7), vida = 100, mapa = unMapa)
     unZombie.recibirDanio(100)
     assert.that(unZombie.estaMuerto())
   }
