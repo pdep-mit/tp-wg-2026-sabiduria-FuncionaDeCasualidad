@@ -4,10 +4,10 @@ import zombies.*
 import mapa.*
 import pesos.*
 object motor {
-  var mapa = null
-  var sistemaDePesos = null
-  var generadorDeZombies = null
-  var enCurso = false
+  var property mapa = null
+  var property sistemaDePesos = null
+  var property generadorDeZombies = null
+  var property enCurso = false
   const efectos = []
   const recargasDeDefensas = []
 

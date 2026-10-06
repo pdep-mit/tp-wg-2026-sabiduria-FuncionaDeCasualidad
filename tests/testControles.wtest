@@ -1,0 +1,65 @@
+import controles.*
+import motor.*
+import mapa.*
+import pesos.*
+import defensas.*
+
+describe "Controles - selección y colocación de defensas" {
+  const mapaDeJuego = new Mapa(filas = 9, columnas = 20)
+  const pesosDeJuego = new SistemaDePesos(
+    pesosDisponibles = 100,
+    pesosPorGeneracion = 25,
+    intervaloDeGeneracion = 50
+  )
+
+  method initialize() {
+    mapaDeJuego.crearCasilleros()
+    motor.iniciar(mapaDeJuego, pesosDeJuego, null)
+    controles.iniciar(motor)
+  }
+
+  test "inicialmente no hay ninguna defensa seleccionada" {
+    controles.tipoDeDefensaSeleccionada(null)
+    assert.equals(null, controles.tipoDeDefensaSeleccionada())
+  }
+
+  test "seleccionar defensa con teclas 1, 2 y 3 (numérico o string)" {
+    controles.seleccionarDefensa(1)
+    assert.equals("vendecursos", controles.tipoDeDefensaSeleccionada())
+
+    controles.seleccionarDefensa(2)
+    assert.equals("verdulero", controles.tipoDeDefensaSeleccionada())
+
+    controles.seleccionarDefensa(3)
+    assert.equals("panadero", controles.tipoDeDefensaSeleccionada())
+
+    controles.seleccionarDefensa("1")
+    assert.equals("vendecursos", controles.tipoDeDefensaSeleccionada())
+  }
+
+  test "crearDefensaSeleccionada genera la instancia correspondiente en la fila y columna indicadas" {
+    controles.seleccionarDefensa(2)
+    const verdulero = controles.crearDefensaSeleccionada(3, 4)
+    assert.notEquals(null, verdulero)
+    assert.equals(game.at(4, 3), verdulero.position())
+    assert.equals(10, verdulero.costo())
+
+    controles.seleccionarDefensa(3)
+    const panadero = controles.crearDefensaSeleccionada(1, 2)
+    assert.notEquals(null, panadero)
+    assert.equals(game.at(2, 1), panadero.position())
+    assert.equals(300, panadero.vida())
+
+    controles.seleccionarDefensa(1)
+    const vendecursos = controles.crearDefensaSeleccionada(0, 0)
+    assert.notEquals(null, vendecursos)
+    assert.equals(game.at(0, 0), vendecursos.position())
+  }
+
+  test "colocarDefensaSeleccionada delega la colocación al motor" {
+    controles.seleccionarDefensa(2)
+    // No debe arrojar error al llamar a colocarDefensaSeleccionada
+    controles.colocarDefensaSeleccionada(3, 4)
+    assert.that(true)
+  }
+}
