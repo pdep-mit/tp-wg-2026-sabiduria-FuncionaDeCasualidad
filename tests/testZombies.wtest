@@ -1,0 +1,56 @@
+import wollok.game.*
+import zombies.*
+import mapa.*
+import defensas.*
+describe "Test de ZombieComun" {
+    const unMapa = new Mapa(filas = 9, columnas = 20)
+    const unZombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
+    const zombieGanador = new ZombieComun(position = game.at(1, 2), mapa = unMapa)
+    const zombieAtaque = new ZombieComun(position = game.at(5, 2), mapa = unMapa)
+    const zombie = new ZombieComun(position = game.at(10,2), mapa = unMapa)
+test "Un zombie común recien creado inicia con 300 de vida" {
+    unMapa.crearCasilleros()
+    assert.equals(300, unZombie.vida())
+}
+
+test "Un zombie recibe daño correctamente restando su vida y activa la animación de golpe" {
+    unMapa.crearCasilleros()
+    unZombie.recibirDanio(100)
+    assert.equals(200, unZombie.vida())
+    assert.equals("zombie_recibe_ataque.png", unZombie.image())
+}
+
+test "El zombie llega a la casa cuando esta en la columna 1 y festeja" {
+    unMapa.crearCasilleros()
+    assert.that(zombieGanador.llegoALaCasa())
+    zombieGanador.actualizar()
+    assert.equals("zombie_gana.png", zombieGanador.image())
+}
+
+test "El zombie ataca a la defensa en su casillero y reduce su vida en 10" {
+    unMapa.crearCasilleros()
+    const verdulero = new Verdulero(
+        position = game.at(5,2),
+        vida = 50,
+        costo = 100,
+        danio = 20,
+        mapa = unMapa,
+        intervaloDeColocacion = 10,
+        intervaloDeAccion = 15
+        )
+
+    unMapa.colocarDefensa(verdulero, 2, 5)
+    zombieAtaque.actualizar()
+    zombieAtaque.actualizar()
+    assert.equals(40, verdulero.vida())
+    
+}
+
+test "Un zombie esta muerto cuando su vida llego a 0" {
+    unMapa.crearCasilleros()
+    zombie.recibirDanio(300)
+    assert.that(zombie.estaMuerto())
+}
+
+
+}
