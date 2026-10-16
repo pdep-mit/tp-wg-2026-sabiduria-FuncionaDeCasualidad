@@ -13,6 +13,8 @@ class Mapa {
     // Los casilleros comparten esta lista para sincronizar también cambios directos.
     // Reemplazarla aísla a los casilleros de la grilla anterior.
     defensasActivas = []
+    game.ground("tile_centro.png")
+
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
         casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = defensasActivas))
