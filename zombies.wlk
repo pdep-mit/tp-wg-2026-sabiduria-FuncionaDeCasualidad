@@ -123,3 +123,70 @@ class ZombieComun inherits Zombie (
   imagenZombieAtaca2 = "zombieComun_ataque_2.png") {
 
 }
+
+class ZombieAlbanil inherits Zombie (
+  vida = 600,
+  danio = 10,
+  imagenDanio = "zombieComun_recibe_ataque.png", //momentaneamente los
+  imagenZombieGana = "zombieComun_gana.png",     //de ZombieComun
+  imagenZombieActual = "zombieAlbanil1.png",
+  imagenZombie2 = "zombieAlbanil2.png",
+  imagenZombieBase = "zombieAlbanil1.png",
+  imagenZombieAtaca1 = "zombieAlbanil_ataque_1.png",
+  imagenZombieAtaca2 = "zombieAlbanil_ataque_2.png") {
+
+}
+
+class ZombieMotoquero inherits Zombie (
+  vida = 300, 
+  danio = 10, 
+  imagenDanio = "zombieComun_recibe_ataque.png", //assets del zombieComun
+  imagenZombieGana = "zombieComun_gana.png", 
+  imagenZombieActual = "zombieComun1.png",
+  imagenZombie2 = "zombieComun2.png",
+  imagenZombieBase = "zombieComun1.png",
+  imagenZombieAtaca1 = "zombieComun_ataque_1.png",
+  imagenZombieAtaca2 = "zombieComun_ataque_2.png") {
+
+    var tieneMoto = true
+    const imagenMotoBase = "zombieComun1.png" //reemplazar por zombieMotoquero
+    const imagenMotoGana = "zombieComun_gana.png" //reemplazar por zombieMotoquero
+
+    override method initialize() {
+      super()
+      casillasPorPaso = 2
+      imagenZombieActual = imagenMotoBase
+    }
+
+    override method atacar(defensa) {
+      if(tieneMoto) {
+        self.perderMoto()
+      } else {
+        super(defensa)
+      }
+    }
+
+    method perderMoto() {
+      tieneMoto = false
+      casillasPorPaso = 1
+      imagenZombieActual = imagenZombieBase
+    }
+
+    override method cambiarPaso() {
+      if (tieneMoto) {
+        imagenZombieActual = imagenMotoBase
+      } else {
+        super()
+      }
+    }
+
+    override method llegoALaCasa() {
+      const llego = super()
+      if (llego and tieneMoto) {
+        imagenZombieActual = imagenMotoGana
+      }
+      return llego
+    }
+
+
+}
