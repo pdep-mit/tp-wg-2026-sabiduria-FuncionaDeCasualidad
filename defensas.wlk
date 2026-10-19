@@ -16,7 +16,7 @@ class Verdulero {
   const property intervaloDeColocacion
   const property intervaloDeAccion
   var ticksDesdeUltimaAccion = 0
-  const animacion = new AnimacionDeDefensa(
+  const animacion = new Animacion(
     imagenQuieta = "verdulero_quieto.png",
     cuadros = ["verdulero_ataque_0.png", "verdulero_ataque_1.png", "verdulero_ataque_2.png"],
     ticksPorCuadro = self.intervaloDeAccion() / 3
@@ -31,7 +31,7 @@ class Verdulero {
 
   method estaMuerta() = vida <= 0
 
-  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion
+  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion and !animacion.estaActiva()
 
   method actualizar() {
     if (self.estaMuerta()) { return }
@@ -60,12 +60,15 @@ class Verdulero {
   }
 
   method atacar(zombie) {
-    self.animarAtaque()
-    zombie.recibirDanio(danio)
+    self.animarAtaque(zombie)
   }
 
-  method animarAtaque() {
-    animacion.iniciar()
+  method animarAtaque(zombie) {
+    animacion.iniciar({ =>
+      if (!zombie.estaMuerto()) {
+        zombie.recibirDanio(danio)
+      }
+    })
   }
 }
 
@@ -78,10 +81,10 @@ class Panadero {
   const property costo
   const property mapa
   const property intervaloDeColocacion
-  const animacion = new AnimacionDeDefensa(
+  const animacion = new Animacion(
     imagenQuieta = "panadero_quieto.png",
-    cuadros = ["panadero_brazos_cerrados.png"],
-    ticksPorCuadro = 0
+    cuadros = ["panadero_cubrirse_0.png", "panadero_cubrirse_1.png", "panadero_cubrirse_2.png"],
+    ticksPorCuadro = 6
   )
 
   method image() = animacion.image()
@@ -89,7 +92,7 @@ class Panadero {
 
   method recibirDanio(cantidad) {
     vida = vida - cantidad
-    // Feedback visual: cambia de pose al recibir daño.
+    // Se cubre con los panes al recibir daño.
     self.animarDanio()
   }
 
@@ -103,7 +106,9 @@ class Panadero {
   }
 
   method animarDanio() {
-    animacion.iniciar()
+    if (!animacion.estaActiva()) {
+      animacion.iniciar({ => })
+    }
   }
 }
 
@@ -121,10 +126,10 @@ class Vendecursos {
   const property sistemaDePesos
   const property pesosPorVenta
   var property bloqueado = false
-  const animacion = new AnimacionDeDefensa(
+  const animacion = new Animacion(
     imagenQuieta = "vendecursos_quieto.png",
     cuadros = ["vendecursos_salto_0.png", "vendecursos_salto_1.png"],
-    ticksPorCuadro = 30
+    ticksPorCuadro = 60
   )
 
   method image() = animacion.image()
@@ -136,7 +141,7 @@ class Vendecursos {
 
   method estaMuerta() = vida <= 0
 
-  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion
+  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion and !animacion.estaActiva()
 
   // Un zombie inspector puede bloquear al vendecursos para que
   // no genere pesos hasta que el inspector muera.
@@ -152,7 +157,6 @@ class Vendecursos {
     ticksDesdeUltimaAccion = ticksDesdeUltimaAccion + 1
     if (!self.puedeActuar() or self.estaBloqueado()) { return }
 
-    self.generarPesos()
     ticksDesdeUltimaAccion = 0
     self.animarVenta()
     return
@@ -163,29 +167,42 @@ class Vendecursos {
   }
 
   method animarVenta() {
-    animacion.iniciar()
+    animacion.iniciar({ =>
+      if (!self.estaBloqueado()) {
+        self.generarPesos()
+      }
+    })
   }
 }
 
-// Cada acción inicia una secuencia; cada cuadro dura los ticks indicados.
-class AnimacionDeDefensa {
+// Cada cuadro dura los ticks indicados; el bloque se ejecuta al entrar al último.
+class Animacion {
   const imagenQuieta
   const cuadros
   const ticksPorCuadro
   var indiceDeCuadro = 0
   var contadorTicks = 0
   var activo = false
+  var alIniciarUltimoCuadro = { => }
 
   method image() = if (!activo) imagenQuieta else cuadros.get(indiceDeCuadro)
+  method estaActiva() = activo
 
-  method iniciar() {
+  method iniciar(accion) {
     indiceDeCuadro = 0
     contadorTicks = 0
+    alIniciarUltimoCuadro = accion
     activo = true
+    if (indiceDeCuadro == cuadros.size() - 1) {
+      alIniciarUltimoCuadro.apply()
+    }
   }
 
   method avanzarCuadro() {
     indiceDeCuadro = (indiceDeCuadro + 1).min(cuadros.size())
+    if (indiceDeCuadro == cuadros.size() - 1) {
+      alIniciarUltimoCuadro.apply()
+    }
   }
 
   method actualizar() {
