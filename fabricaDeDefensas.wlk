@@ -29,7 +29,7 @@ class FabricaDeDefensas {
         danio = 20,
         mapa = mapa,
         intervaloDeColocacion = 10,
-        intervaloDeAccion = 15
+        intervaloDeAccion = 90
       )
     }
     if (tipo == "panadero") {

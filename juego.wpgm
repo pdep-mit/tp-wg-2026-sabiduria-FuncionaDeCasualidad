@@ -11,7 +11,7 @@ program ConurbanoVsZombies {
 	game.height(6) // Cinco filas jugables y una franja de indicadores.
 	game.cellSize(100)
 
-	const milisegundosPorTick = 100
+	const milisegundosPorTick = 1000 / 60
 	const mapaDeJuego = new Mapa(filas = game.height() - 1, columnas = game.width())
 	const pesosDeJuego = new SistemaDePesos(
 		pesosDisponibles = 100,

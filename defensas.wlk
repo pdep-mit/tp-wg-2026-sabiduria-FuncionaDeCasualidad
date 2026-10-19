@@ -18,7 +18,8 @@ class Verdulero {
   var ticksDesdeUltimaAccion = 0
   const animacion = new AnimacionDeDefensa(
     imagenQuieta = "verdulero_quieto.png",
-    cuadros = ["verdulero_ataque_0.png", "verdulero_ataque_1.png", "verdulero_ataque_2.png"]
+    cuadros = ["verdulero_ataque_0.png", "verdulero_ataque_1.png", "verdulero_ataque_2.png"],
+    ticksPorCuadro = self.intervaloDeAccion() / 3
   )
 
   method image() = animacion.image()
@@ -79,7 +80,8 @@ class Panadero {
   const property intervaloDeColocacion
   const animacion = new AnimacionDeDefensa(
     imagenQuieta = "panadero_quieto.png",
-    cuadros = ["panadero_brazos_cerrados.png"]
+    cuadros = ["panadero_brazos_cerrados.png"],
+    ticksPorCuadro = 0
   )
 
   method image() = animacion.image()
@@ -121,7 +123,8 @@ class Vendecursos {
   var property bloqueado = false
   const animacion = new AnimacionDeDefensa(
     imagenQuieta = "vendecursos_quieto.png",
-    cuadros = ["vendecursos_salto_0.png", "vendecursos_salto_1.png"]
+    cuadros = ["vendecursos_salto_0.png", "vendecursos_salto_1.png"],
+    ticksPorCuadro = 30
   )
 
   method image() = animacion.image()
@@ -164,24 +167,40 @@ class Vendecursos {
   }
 }
 
-// Cada acción inicia una secuencia; cada tick muestra el siguiente cuadro.
+// Cada acción inicia una secuencia; cada cuadro dura los ticks indicados.
 class AnimacionDeDefensa {
   const imagenQuieta
   const cuadros
-  var indiceDeCuadro = -1
+  const ticksPorCuadro
+  var indiceDeCuadro = 0
+  var contadorTicks = 0
+  var activo = false
 
-  method image() = if (indiceDeCuadro < 0) imagenQuieta else cuadros.get(indiceDeCuadro)
+  method image() = if (!activo) imagenQuieta else cuadros.get(indiceDeCuadro)
 
   method iniciar() {
     indiceDeCuadro = 0
+    contadorTicks = 0
+    activo = true
+  }
+
+  method avanzarCuadro() {
+    indiceDeCuadro = (indiceDeCuadro + 1).min(cuadros.size())
   }
 
   method actualizar() {
-    if (indiceDeCuadro < 0) { return }
+    if (!activo) { return }
 
-    indiceDeCuadro += 1
+    contadorTicks += 1
+    if (contadorTicks >= ticksPorCuadro) {
+      self.avanzarCuadro()
+      contadorTicks = 0
+    }
+
     if (indiceDeCuadro >= cuadros.size()) {
-      indiceDeCuadro = -1
+      activo = false
+      contadorTicks = 0
+      indiceDeCuadro = 0
     }
     return
   }
