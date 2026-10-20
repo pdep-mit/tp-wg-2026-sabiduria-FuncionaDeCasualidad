@@ -16,6 +16,8 @@ class Mapa {
     // Reemplazarla aísla a los casilleros de la grilla anterior.
     defensasActivas = []
     proyectilesActivos.clear()
+    game.ground("tile_centro.png")
+
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
         casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = defensasActivas))

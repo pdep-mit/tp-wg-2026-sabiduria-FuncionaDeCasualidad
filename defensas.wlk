@@ -17,13 +17,10 @@ class Verdulero {
   const property intervaloDeAccion
   const property velocidadDeProyectil = 1
   var ticksDesdeUltimaAccion = 0
-  const animacion = new AnimacionDeDefensa(
+  const animacion = new Animacion(
     imagenQuieta = "verdulero_quieto.png",
-    cuadros = [
-      "verdulero_ataque_0.png",
-      "verdulero_ataque_1.png",
-      "verdulero_ataque_2.png"
-    ]
+    cuadros = ["verdulero_ataque_0.png", "verdulero_ataque_1.png", "verdulero_ataque_2.png"],
+    ticksPorCuadro = self.intervaloDeAccion() / 3
   )
   
   method image() = animacion.image()
@@ -35,9 +32,10 @@ class Verdulero {
   }
   
   method estaMuerta() = vida <= 0
-  
-  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion
-  
+
+  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion and !animacion.estaActiva()
+
+
   method actualizar() {
     if (self.estaMuerta()) {
       return
@@ -74,7 +72,7 @@ class Verdulero {
   }
   
   method atacar(zombie) {
-    self.animarAtaque()
+    self.animarAtaque(zombie)
     self.disparar(zombie)
   }
   
@@ -92,8 +90,12 @@ class Verdulero {
     game.addVisual(proyectil)
   }
   
-  method animarAtaque() {
-    animacion.iniciar()
+  method animarAtaque(zombie) {
+    animacion.iniciar({ =>
+      if (!zombie.estaMuerto()) {
+        zombie.recibirDanio(danio)
+      }
+    })
   }
 } // Panadero: barrera defensiva de alta vida. Deja un canasto de
 
@@ -107,9 +109,10 @@ class Panadero {
   const property danio = 0
   const property mapa
   const property intervaloDeColocacion
-  const animacion = new AnimacionDeDefensa(
+  const animacion = new Animacion(
     imagenQuieta = "panadero_quieto.png",
-    cuadros = ["panadero_brazos_cerrados.png"]
+    cuadros = ["panadero_cubrirse_0.png", "panadero_cubrirse_1.png", "panadero_cubrirse_2.png"],
+    ticksPorCuadro = 6
   )
   
   method image() = animacion.image()
@@ -118,7 +121,7 @@ class Panadero {
   
   method recibirDanio(cantidad) {
     vida -= cantidad
-    // Feedback visual: cambia de pose al recibir daño.
+    // Se cubre con los panes al recibir daño.
     self.animarDanio()
   }
   
@@ -139,7 +142,9 @@ class Panadero {
   }
   
   method animarDanio() {
-    animacion.iniciar()
+    if (!animacion.estaActiva()) {
+      animacion.iniciar({ => })
+    }
   }
 } // Vendecursos: genera pesos periódicamente vendiendo cursos.
 
@@ -158,9 +163,10 @@ class Vendecursos {
   const property sistemaDePesos
   const property pesosPorVenta
   var property bloqueado = false
-  const animacion = new AnimacionDeDefensa(
+  const animacion = new Animacion(
     imagenQuieta = "vendecursos_quieto.png",
-    cuadros = ["vendecursos_salto_0.png", "vendecursos_salto_1.png"]
+    cuadros = ["vendecursos_salto_0.png", "vendecursos_salto_1.png"],
+    ticksPorCuadro = 60
   )
   
   method image() = animacion.image()
@@ -172,9 +178,10 @@ class Vendecursos {
   }
   
   method estaMuerta() = vida <= 0
-  
-  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion
-  
+
+  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion and !animacion.estaActiva()
+
+
   // Un zombie inspector puede bloquear al vendecursos para que
   // no genere pesos hasta que el inspector muera.
   method estaBloqueado() = bloqueado
@@ -194,11 +201,9 @@ class Vendecursos {
     
     animacion.actualizar()
     ticksDesdeUltimaAccion += 1
-    if ((!self.puedeActuar()) or self.estaBloqueado()) {
-      return
-    }
-    
-    self.generarPesos()
+    if (!self.puedeActuar() or self.estaBloqueado()) { return }
+
+
     ticksDesdeUltimaAccion = 0
     self.animarVenta()
     return
@@ -214,30 +219,58 @@ class Vendecursos {
   }
   
   method animarVenta() {
-    animacion.iniciar()
+    animacion.iniciar({ =>
+      if (!self.estaBloqueado()) {
+        self.generarPesos()
+      }
+    })
   }
 } // Cada acción inicia una secuencia; cada tick muestra el siguiente cuadro.
 
-class AnimacionDeDefensa {
+// Cada cuadro dura los ticks indicados; el bloque se ejecuta al entrar al último.
+class Animacion {
   const imagenQuieta
   const cuadros
-  var indiceDeCuadro = -1
-  
-  method image() = if (indiceDeCuadro < 0) imagenQuieta
-                   else cuadros.get(indiceDeCuadro)
-  
-  method iniciar() {
+  const ticksPorCuadro
+  var indiceDeCuadro = 0
+  var contadorTicks = 0
+  var activo = false
+  var alIniciarUltimoCuadro = { => }
+
+  method image() = if (!activo) imagenQuieta else cuadros.get(indiceDeCuadro)
+  method estaActiva() = activo
+
+  method iniciar(accion) {
     indiceDeCuadro = 0
+    contadorTicks = 0
+    alIniciarUltimoCuadro = accion
+    activo = true
+    if (indiceDeCuadro == cuadros.size() - 1) {
+      alIniciarUltimoCuadro.apply()
+    }
+  }
+
+  method avanzarCuadro() {
+    indiceDeCuadro = (indiceDeCuadro + 1).min(cuadros.size())
+    if (indiceDeCuadro == cuadros.size() - 1) {
+      alIniciarUltimoCuadro.apply()
+    }
   }
   
   method actualizar() {
-    if (indiceDeCuadro < 0) {
-      return
+    if (!activo) { return }
+
+    contadorTicks += 1
+    if (contadorTicks >= ticksPorCuadro) {
+      self.avanzarCuadro()
+      contadorTicks = 0
     }
-    
-    indiceDeCuadro += 1
+
+
     if (indiceDeCuadro >= cuadros.size()) {
-      indiceDeCuadro = -1
+      activo = false
+      contadorTicks = 0
+      indiceDeCuadro = 0
     }
     return
   }

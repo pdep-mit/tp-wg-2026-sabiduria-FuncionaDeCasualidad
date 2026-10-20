@@ -15,8 +15,8 @@ class FabricaDeDefensas {
         vida = 100,
         costo = 50,
         mapa = mapa,
-        intervaloDeColocacion = 10,
-        intervaloDeAccion = 100,
+        intervaloDeColocacion = 90,
+        intervaloDeAccion = 120,
         sistemaDePesos = sistemaDePesos,
         pesosPorVenta = 25
       )
@@ -28,8 +28,8 @@ class FabricaDeDefensas {
         costo = 100,
         danio = 20,
         mapa = mapa,
-        intervaloDeColocacion = 10,
-        intervaloDeAccion = 15
+        intervaloDeColocacion = 90,
+        intervaloDeAccion = 90
       )
     }
     if (tipo == "panadero") {
@@ -38,7 +38,7 @@ class FabricaDeDefensas {
         vida = 500,
         costo = 50,
         mapa = mapa,
-        intervaloDeColocacion = 50
+        intervaloDeColocacion = 300
       )
     }
     return null

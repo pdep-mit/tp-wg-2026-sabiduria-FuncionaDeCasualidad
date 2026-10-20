@@ -1,23 +1,29 @@
 import wollok.game.*
 
-class ZombieComun {
+class Zombie {
   var property position
-  var property vida = 300
+  var property vida
   var property casillasPorPaso = 1
   const property mapa
   const ticksEntrePasos = 100
   var ticksDesdeUltimoPaso = 0
-  const property danio = 10
+  const property danio
   const property intervaloDeAtaque = 2
   var ticksDesdeUltimoAtaque = 0
   var ticksAnimacionDanio = 0
-  const imagenDanio = "zombie_recibe_ataque.png"
-  var imagenActual = "zombie1.png"
+  const imagenDanio 
+  const imagenZombieGana 
+  var imagenZombieActual 
+  const imagenZombie2 
+  const imagenZombieBase 
+  const imagenZombieAtaca1
+  const imagenZombieAtaca2 
+  
   method image() {
     if (ticksAnimacionDanio > 0) {
       return imagenDanio
     }
-    return imagenActual
+    return imagenZombieActual
   }
 
   method actualizar() {
@@ -27,7 +33,7 @@ class ZombieComun {
       ticksAnimacionDanio -= 1
     }
     if (self.llegoALaCasa()) {
-      imagenActual = "zombie_gana.png"
+      imagenZombieActual = imagenZombieGana
       return
     }
 
@@ -47,7 +53,7 @@ class ZombieComun {
 
     self.avanzar()
     if (self.llegoALaCasa()) {
-      imagenActual = "zombie_gana.png"
+      imagenZombieActual = imagenZombieGana
     } else {
       self.cambiarPaso()
     }
@@ -70,10 +76,10 @@ class ZombieComun {
   }
 
   method cambiarPaso() {
-    if (imagenActual == "zombie1.png") {
-      imagenActual = "zombie2.png"
+    if (imagenZombieActual == imagenZombieBase) {
+      imagenZombieActual = imagenZombie2
     } else {
-      imagenActual = "zombie1.png"
+      imagenZombieActual = imagenZombieBase
     }
   }
 
@@ -85,9 +91,9 @@ class ZombieComun {
   method atacar(defensa) {
     ticksDesdeUltimoAtaque += 1
     if (ticksDesdeUltimoAtaque % 2 == 0) {
-      imagenActual = "zombie_ataque_1.png"
+      imagenZombieActual = imagenZombieAtaca1
     } else {
-      imagenActual = "zombie_ataque_2.png"
+      imagenZombieActual = imagenZombieAtaca2
     }
     if (ticksDesdeUltimoAtaque >= intervaloDeAtaque) {
       defensa.recibirDanio(danio)
@@ -103,4 +109,84 @@ class ZombieComun {
   method estaMuerto() = vida <= 0
 
   method llegoALaCasa() = position.x() <= 1
+}
+
+class ZombieComun inherits Zombie (
+  vida = 300, 
+  danio = 10, 
+  imagenDanio = "zombieComun_recibe_ataque.png",
+  imagenZombieGana = "zombieComun_gana.png", 
+  imagenZombieActual = "zombieComun1.png",
+  imagenZombie2 = "zombieComun2.png",
+  imagenZombieBase = "zombieComun1.png",
+  imagenZombieAtaca1 = "zombieComun_ataque_1.png",
+  imagenZombieAtaca2 = "zombieComun_ataque_2.png") {
+
+}
+
+class ZombieAlbanil inherits Zombie (
+  vida = 600,
+  danio = 10,
+  imagenDanio = "zombieComun_recibe_ataque.png", //momentaneamente los
+  imagenZombieGana = "zombieComun_gana.png",     //de ZombieComun
+  imagenZombieActual = "zombieAlbanil1.png",
+  imagenZombie2 = "zombieAlbanil2.png",
+  imagenZombieBase = "zombieAlbanil1.png",
+  imagenZombieAtaca1 = "zombieAlbanil_ataque_1.png",
+  imagenZombieAtaca2 = "zombieAlbanil_ataque_2.png") {
+
+}
+
+class ZombieMotoquero inherits Zombie (
+  vida = 300, 
+  danio = 10, 
+  imagenDanio = "zombieComun_recibe_ataque.png", //assets del zombieComun
+  imagenZombieGana = "zombieComun_gana.png", 
+  imagenZombieActual = "zombieComun1.png",
+  imagenZombie2 = "zombieComun2.png",
+  imagenZombieBase = "zombieComun1.png",
+  imagenZombieAtaca1 = "zombieComun_ataque_1.png",
+  imagenZombieAtaca2 = "zombieComun_ataque_2.png") {
+
+    var tieneMoto = true
+    const imagenMotoBase = "zombieComun1.png" //reemplazar por zombieMotoquero
+    const imagenMotoGana = "zombieComun_gana.png" //reemplazar por zombieMotoquero
+
+    override method initialize() {
+      super()
+      casillasPorPaso = 2
+      imagenZombieActual = imagenMotoBase
+    }
+
+    override method atacar(defensa) {
+      if(tieneMoto) {
+        self.perderMoto()
+      } else {
+        super(defensa)
+      }
+    }
+
+    method perderMoto() {
+      tieneMoto = false
+      casillasPorPaso = 1
+      imagenZombieActual = imagenZombieBase
+    }
+
+    override method cambiarPaso() {
+      if (tieneMoto) {
+        imagenZombieActual = imagenMotoBase
+      } else {
+        super()
+      }
+    }
+
+    override method llegoALaCasa() {
+      const llego = super()
+      if (llego and tieneMoto) {
+        imagenZombieActual = imagenMotoGana
+      }
+      return llego
+    }
+
+
 }

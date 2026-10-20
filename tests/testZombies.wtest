@@ -17,14 +17,14 @@ test "Un zombie recibe da√±o correctamente restando su vida y activa la animaci√
     unMapa.crearCasilleros()
     unZombie.recibirDanio(100)
     assert.equals(200, unZombie.vida())
-    assert.equals("zombie_recibe_ataque.png", unZombie.image())
+    assert.equals("zombieComun_recibe_ataque.png", unZombie.image())
 }
 
 test "El zombie llega a la casa cuando esta en la columna 1 y festeja" {
     unMapa.crearCasilleros()
     assert.that(zombieGanador.llegoALaCasa())
     zombieGanador.actualizar()
-    assert.equals("zombie_gana.png", zombieGanador.image())
+    assert.equals("zombieComun_gana.png", zombieGanador.image())
 }
 
 test "El zombie ataca a la defensa en su casillero y reduce su vida en 10" {

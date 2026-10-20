@@ -1,7 +1,6 @@
 // Archivo de tests de referencia, borrar luego de desarrollar propios
 import defensas.*
 import zombies.*
-import inicio.*
 import mapa.*
 describe "grupo de tests" {
 
