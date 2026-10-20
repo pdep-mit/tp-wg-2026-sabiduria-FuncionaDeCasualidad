@@ -108,6 +108,8 @@ class Zombie {
 
   method estaMuerto() = vida <= 0
 
+  method bloqueaGeneracionDePesos() = false
+
   method llegoALaCasa() = position.x() <= 1
 }
 
@@ -187,6 +189,18 @@ class ZombieMotoquero inherits Zombie (
       }
       return llego
     }
+}
 
+class ZombieInspector inherits Zombie (
+  vida = 300, 
+  danio = 10, 
+  imagenDanio = "zombieInspector_recibe_ataque.png",
+  imagenZombieGana = "zombieInspector_gana.png", 
+  imagenZombieActual = "zombieInspector1.png",
+  imagenZombie2 = "zombieInspector2.png",
+  imagenZombieBase = "zombieInspector1.png",
+  imagenZombieAtaca1 = "zombieInspector_ataque_1.png",
+  imagenZombieAtaca2 = "zombieInspector_ataque_2.png") {
 
+    override method bloqueaGeneracionDePesos() = !self.estaMuerto()
 }
