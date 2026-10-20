@@ -127,8 +127,8 @@ class ZombieComun inherits Zombie (
 class ZombieAlbanil inherits Zombie (
   vida = 600,
   danio = 10,
-  imagenDanio = "zombieComun_recibe_ataque.png", //momentaneamente los
-  imagenZombieGana = "zombieComun_gana.png",     //de ZombieComun
+  imagenDanio = "zombieAlbanil_recibe_ataque.png", 
+  imagenZombieGana = "zombieAlbanil_gana.png",     
   imagenZombieActual = "zombieAlbanil1.png",
   imagenZombie2 = "zombieAlbanil2.png",
   imagenZombieBase = "zombieAlbanil1.png",
@@ -149,8 +149,8 @@ class ZombieMotoquero inherits Zombie (
   imagenZombieAtaca2 = "zombieComun_ataque_2.png") {
 
     var tieneMoto = true
-    const imagenMotoBase = "zombieComun1.png" //reemplazar por zombieMotoquero
-    const imagenMotoGana = "zombieComun_gana.png" //reemplazar por zombieMotoquero
+    const imagenMotoBase = "zombieMotoquero.png"
+    const imagenMotoGana = "zombieMotoquero_gana.png" 
 
     override method initialize() {
       super()
