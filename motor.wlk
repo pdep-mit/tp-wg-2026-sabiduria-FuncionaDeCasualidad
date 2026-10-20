@@ -30,6 +30,9 @@ object motor {
     self.actualizarRecargas()
     sistemaDePesos.actualizar()
     self.actualizarDefensas()
+    // Mover y resolver impactos de proyectiles lanzados este tick.
+    self.actualizarProyectiles()
+    self.eliminarProyectilesImpactados()
     // Un zombie abatido por las defensas no puede morder en este tick.
     self.eliminarMuertos()
     self.actualizarZombies()
@@ -43,6 +46,23 @@ object motor {
 
   method actualizarDefensas() {
     mapa.defensas().forEach({ defensa => defensa.actualizar() })
+  }
+
+  // Actualiza cada proyectil activo (lo mueve un paso según su velocidad).
+  // El polimorfismo garantiza que cualquier tipo de proyectil responde a
+  // actualizar() sin que el motor conozca su implementación concreta.
+  method actualizarProyectiles() {
+    mapa.proyectiles().forEach({ proyectil => proyectil.actualizar() })
+  }
+
+  // Retira del juego los proyectiles que ya impactaron o salieron del mapa.
+  method eliminarProyectilesImpactados() {
+    mapa.proyectiles().filter({ proyectil => proyectil.estaMuerto() }).forEach(
+      { proyectil =>
+        mapa.quitarProyectil(proyectil)
+        if (game.hasVisual(proyectil)) game.removeVisual(proyectil)
+      }
+    )
   }
 
   method actualizarZombies() {

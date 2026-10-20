@@ -7,12 +7,15 @@ class Mapa {
   const property casilleros = []
   const property zombies = []
   var defensasActivas = []
+  // Lista de proyectiles activos en el mapa (cualquier tipo de defensa).
+  const property proyectilesActivos = []
 
   method crearCasilleros() {
     casilleros.clear()
     // Los casilleros comparten esta lista para sincronizar también cambios directos.
     // Reemplazarla aísla a los casilleros de la grilla anterior.
     defensasActivas = []
+    proyectilesActivos.clear()
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
         casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = defensasActivas))
@@ -64,6 +67,19 @@ class Mapa {
 
   method quitarZombie(zombie) {
     zombies.remove(zombie)
+  }
+
+  method agregarProyectil(proyectil) {
+    proyectilesActivos.add(proyectil)
+  }
+
+  method quitarProyectil(proyectil) {
+    proyectilesActivos.remove(proyectil)
+  }
+
+  // Devuelve una copia protegida para iterar de forma segura.
+  method proyectiles() {
+    return proyectilesActivos.copy()
   }
 
   method zombiesEnLinea(fila) {
