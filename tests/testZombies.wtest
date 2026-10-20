@@ -6,7 +6,7 @@ describe "Test de ZombieComun" {
     const unMapa = new Mapa(filas = 9, columnas = 20)
     const unZombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
     const zombieGanador = new ZombieComun(position = game.at(0, 2), mapa = unMapa)
-    const zombieAtaque = new ZombieComun(position = game.at(5, 2), mapa = unMapa)
+    const zombieAtaque = new ZombieComun(position = game.at(6, 2), mapa = unMapa)
     const zombie = new ZombieComun(position = game.at(10,2), mapa = unMapa)
 test "Un zombie común recien creado inicia con 300 de vida" {
     unMapa.crearCasilleros()
@@ -27,7 +27,7 @@ test "El zombie llega a la casa cuando esta en la columna 0 y festeja" {
     assert.equals("zombieComun_gana.png", zombieGanador.image())
 }
 
-test "El zombie ataca a la defensa en su casillero y reduce su vida en 10" {
+test "El zombie ataca desde la casilla a la derecha y reduce la vida de la defensa en 10" {
     unMapa.crearCasilleros()
     const verdulero = new Verdulero(
         position = game.at(5,2),
@@ -40,7 +40,7 @@ test "El zombie ataca a la defensa en su casillero y reduce su vida en 10" {
         )
 
     unMapa.colocarDefensa(verdulero, 2, 5)
-    30.times({ i => zombieAtaque.actualizar()})
+    30.times({ i => zombieAtaque.actualizar() })
     assert.equals(40, verdulero.vida())
     
 }

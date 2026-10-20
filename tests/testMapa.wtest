@@ -173,12 +173,12 @@ describe "Mapa - interacción con zombies" {
     assert.equals([zombieCerca], zombiesAlcanzados)
   }
 
-  test "algunZombieLlegoALaCasa detecta si un enemigo llegó a x = 1" {
+  test "algunZombieLlegoALaCasa detecta si un enemigo llegó a x = 0" {
     const zombieLejos = new ZombieComun(position = game.at(10, 2), mapa = mapa)
     mapa.agregarZombie(zombieLejos)
     assert.notThat(mapa.algunZombieLlegoALaCasa())
 
-    const zombieEnLaCasa = new ZombieComun(position = game.at(1, 2), mapa = mapa)
+    const zombieEnLaCasa = new ZombieComun(position = game.at(0, 2), mapa = mapa)
     mapa.agregarZombie(zombieEnLaCasa)
     assert.that(mapa.algunZombieLlegoALaCasa())
   }
