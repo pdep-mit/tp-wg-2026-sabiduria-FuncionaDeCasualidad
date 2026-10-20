@@ -19,7 +19,11 @@ class Verdulero {
   var ticksDesdeUltimaAccion = 0
   const animacion = new Animacion(
     imagenQuieta = "verdulero_quieto.png",
-    cuadros = ["verdulero_ataque_0.png", "verdulero_ataque_1.png", "verdulero_ataque_2.png"],
+    cuadros = [
+      "verdulero_ataque_0.png",
+      "verdulero_ataque_1.png",
+      "verdulero_ataque_2.png"
+    ],
     ticksPorCuadro = self.intervaloDeAccion() / 3
   )
   
@@ -32,10 +36,9 @@ class Verdulero {
   }
   
   method estaMuerta() = vida <= 0
-
-  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion and !animacion.estaActiva()
-
-
+  
+  method puedeActuar() = (ticksDesdeUltimaAccion >= intervaloDeAccion) and (!animacion.estaActiva())
+  
   method actualizar() {
     if (self.estaMuerta()) {
       return
@@ -75,14 +78,11 @@ class Verdulero {
     self.animarAtaque(zombie)
   }
   
-  // Crea un proyectil propio del Verdulero y lo registra en el juego.
-  // El motor lo actualizará cada tick de forma polimórfica.
-  method disparar(objetivo) {
+  method disparar() {
     const proyectil = new ProyectilVerdura(
       position = position,
       danio = danio,
       velocidad = velocidadDeProyectil,
-      objetivo = objetivo,
       mapa = mapa
     )
     mapa.agregarProyectil(proyectil)
@@ -90,8 +90,7 @@ class Verdulero {
   }
   
   method animarAtaque(zombie) {
-    // El callback se ejecuta al entrar al tercer y último cuadro.
-    animacion.iniciar({ => self.disparar(zombie) })
+    animacion.iniciar({ if (!zombie.estaMuerto()) zombie.recibirDanio(danio) })
   }
 } // Panadero: barrera defensiva de alta vida. Deja un canasto de
 
@@ -107,7 +106,11 @@ class Panadero {
   const property intervaloDeColocacion
   const animacion = new Animacion(
     imagenQuieta = "panadero_quieto.png",
-    cuadros = ["panadero_cubrirse_0.png", "panadero_cubrirse_1.png", "panadero_cubrirse_2.png"],
+    cuadros = [
+      "panadero_cubrirse_0.png",
+      "panadero_cubrirse_1.png",
+      "panadero_cubrirse_2.png"
+    ],
     ticksPorCuadro = 6
   )
   
@@ -138,9 +141,7 @@ class Panadero {
   }
   
   method animarDanio() {
-    if (!animacion.estaActiva()) {
-      animacion.iniciar({ => })
-    }
+    if (!animacion.estaActiva()) animacion.iniciar({   })
   }
 } // Vendecursos: genera pesos periódicamente vendiendo cursos.
 
@@ -174,10 +175,9 @@ class Vendecursos {
   }
   
   method estaMuerta() = vida <= 0
-
-  method puedeActuar() = ticksDesdeUltimaAccion >= intervaloDeAccion and !animacion.estaActiva()
-
-
+  
+  method puedeActuar() = (ticksDesdeUltimaAccion >= intervaloDeAccion) and (!animacion.estaActiva())
+  
   // Un zombie inspector puede bloquear al vendecursos para que
   // no genere pesos hasta que el inspector muera.
   method estaBloqueado() = bloqueado
@@ -197,9 +197,11 @@ class Vendecursos {
     
     animacion.actualizar()
     ticksDesdeUltimaAccion += 1
-    if (!self.puedeActuar() or self.estaBloqueado()) { return }
-
-
+    if ((!self.puedeActuar()) or self.estaBloqueado()) {
+      return
+    }
+    
+    
     ticksDesdeUltimaAccion = 0
     self.animarVenta()
     return
@@ -215,11 +217,7 @@ class Vendecursos {
   }
   
   method animarVenta() {
-    animacion.iniciar({ =>
-      if (!self.estaBloqueado()) {
-        self.generarPesos()
-      }
-    })
+    animacion.iniciar({ if (!self.estaBloqueado()) self.generarPesos() })
   }
 } // Cada acción inicia una secuencia; cada tick muestra el siguiente cuadro.
 
@@ -231,38 +229,39 @@ class Animacion {
   var indiceDeCuadro = 0
   var contadorTicks = 0
   var activo = false
-  var alIniciarUltimoCuadro = { => }
-
+  var alIniciarUltimoCuadro = { 
+    
+  }
+  
   method image() = if (!activo) imagenQuieta else cuadros.get(indiceDeCuadro)
+  
   method estaActiva() = activo
-
+  
   method iniciar(accion) {
     indiceDeCuadro = 0
     contadorTicks = 0
     alIniciarUltimoCuadro = accion
     activo = true
-    if (indiceDeCuadro == cuadros.size() - 1) {
-      alIniciarUltimoCuadro.apply()
-    }
+    if (indiceDeCuadro == (cuadros.size() - 1)) alIniciarUltimoCuadro.apply()
   }
-
+  
   method avanzarCuadro() {
     indiceDeCuadro = (indiceDeCuadro + 1).min(cuadros.size())
-    if (indiceDeCuadro == cuadros.size() - 1) {
-      alIniciarUltimoCuadro.apply()
-    }
+    if (indiceDeCuadro == (cuadros.size() - 1)) alIniciarUltimoCuadro.apply()
   }
   
   method actualizar() {
-    if (!activo) { return }
-
+    if (!activo) {
+      return
+    }
+    
     contadorTicks += 1
     if (contadorTicks >= ticksPorCuadro) {
       self.avanzarCuadro()
       contadorTicks = 0
     }
-
-
+    
+    
     if (indiceDeCuadro >= cuadros.size()) {
       activo = false
       contadorTicks = 0

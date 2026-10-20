@@ -1,0 +1,230 @@
+import wollok.game.*
+import proyectiles.*
+import mapa.*
+import zombies.*
+import defensas.*
+
+describe "ProyectilVerdura - creación y estado inicial" {
+  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
+  const proyectil = new ProyectilVerdura(
+    position = game.at(2, 3),
+    danio = 20,
+    velocidad = 1,
+    mapa = mapaDeTest
+  )
+  
+  test "un proyectil recién creado no está muerto" {
+    assert.notThat(proyectil.estaMuerto())
+  }
+  
+  test "la posición inicial es la del Verdulero que lo creó" {
+    assert.equals(game.at(2, 3), proyectil.position())
+  }
+}
+
+describe "ProyectilVerdura - movimiento" {
+  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
+  const proyectil = new ProyectilVerdura(
+    position = game.at(2, 3),
+    danio = 20,
+    velocidad = 1,
+    mapa = mapaDeTest
+  )
+  
+  test "avanza una casilla hacia la derecha en cada tick" {
+    proyectil.actualizar()
+    assert.equals(game.at(3, 3), proyectil.position())
+    proyectil.actualizar()
+    assert.equals(game.at(4, 3), proyectil.position())
+  }
+  
+  test "respeta la velocidad indicada al crearlo" {
+    const veloz = new ProyectilVerdura(
+      position = game.at(2, 3),
+      danio = 20,
+      velocidad = 2,
+      mapa = mapaDeTest
+    )
+    veloz.actualizar()
+    assert.equals(game.at(4, 3), veloz.position())
+  }
+}
+
+describe "ProyectilVerdura - salida del mapa" {
+  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
+  
+  test "se destruye cuando supera la última columna sin impactar nada" {
+    mapaDeTest.crearCasilleros()
+    
+    
+    // Arranca en la columna 7 (velocidad 1 -> en el siguiente tick pasa a 8 -> dentro;
+    // luego a 9 -> fuera del mapa de 9 columnas [0..8]).
+    const proyectil = new ProyectilVerdura(
+      position = game.at(7, 0),
+      danio = 20,
+      velocidad = 1,
+      mapa = mapaDeTest
+    )
+    proyectil.actualizar() // x = 8, sigue dentro
+    assert.notThat(proyectil.estaMuerto())
+    proyectil.actualizar() // x = 9, sale del mapa (columnas = 9 → [0..8])
+    assert.that(proyectil.estaMuerto())
+  }
+}
+
+describe "ProyectilVerdura - colisión e impacto" {
+  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
+  
+  method initialize() {
+    mapaDeTest.crearCasilleros()
+  }
+  
+  test "impacta al primer zombie vivo en su misma fila y le aplica daño" {
+    const zombie = new ZombieComun(position = game.at(5, 2), mapa = mapaDeTest)
+    mapaDeTest.agregarZombie(zombie)
+    
+    const proyectil = new ProyectilVerdura(
+      position = game.at(2, 2),
+      danio = 20,
+      velocidad = 1,
+      mapa = mapaDeTest
+    )
+    
+    // Tarda 3 ticks en alcanzar al zombie en x=5
+    proyectil.actualizar() // x=3
+    assert.notThat(proyectil.estaMuerto())
+    proyectil.actualizar() // x=4
+    assert.notThat(proyectil.estaMuerto())
+    proyectil.actualizar() // x=5, colisiona
+    assert.that(proyectil.estaMuerto())
+    assert.equals(280, zombie.vida())
+  }
+  
+  test "se destruye al impactar y no sigue avanzando" {
+    const zombie = new ZombieComun(position = game.at(4, 1), mapa = mapaDeTest)
+    mapaDeTest.agregarZombie(zombie)
+    
+    const proyectil = new ProyectilVerdura(
+      position = game.at(3, 1),
+      danio = 20,
+      velocidad = 1,
+      mapa = mapaDeTest
+    )
+    proyectil.actualizar() // colisiona con zombie en x=4
+    assert.that(proyectil.estaMuerto())
+    
+    
+    // Una vez muerto, actualizar no cambia su posición
+    const posicionAlImpactar = proyectil.position()
+    proyectil.actualizar()
+    assert.equals(posicionAlImpactar, proyectil.position())
+  }
+  
+  test "impacta al zombie más cercano, no atraviesa otros en el camino" {
+    const zombieCercano = new ZombieComun(
+      position = game.at(5, 0),
+      mapa = mapaDeTest
+    )
+    const zombieLejos = new ZombieComun(
+      position = game.at(7, 0),
+      mapa = mapaDeTest
+    )
+    mapaDeTest.agregarZombie(zombieCercano)
+    mapaDeTest.agregarZombie(zombieLejos)
+    
+    const proyectil = new ProyectilVerdura(
+      position = game.at(2, 0),
+      danio = 50,
+      velocidad = 1,
+      mapa = mapaDeTest
+    )
+    
+    // Avanzar hasta colisionar (x=3,4,5)
+    3.times({ proyectil.actualizar() })
+    
+    assert.that(proyectil.estaMuerto())
+    assert.equals(250, zombieCercano.vida()) // recibió 50 de daño
+    assert.equals(300, zombieLejos.vida()) // intacto
+  }
+  
+  test "no impacta zombies en otras filas" {
+    const zombieOtraFila = new ZombieComun(
+      position = game.at(4, 3),
+      mapa = mapaDeTest
+    )
+    mapaDeTest.agregarZombie(zombieOtraFila)
+    
+    const proyectil = new ProyectilVerdura(
+      position = game.at(2, 1),
+      // fila 1
+      danio = 20,
+      velocidad = 1,
+      mapa = mapaDeTest
+    )
+    
+    proyectil.actualizar() // x=3
+    proyectil.actualizar() // x=4, misma columna que el zombie pero otra fila
+    assert.equals(300, zombieOtraFila.vida()) // no recibió daño
+    assert.notThat(proyectil.estaMuerto()) // sigue activo
+  }
+  
+  test "continúa viajando si el único zombie de la fila está muerto" {
+    const zombieMuerto = new ZombieComun(
+      position = game.at(4, 2),
+      mapa = mapaDeTest
+    )
+    mapaDeTest.agregarZombie(zombieMuerto)
+    zombieMuerto.recibirDanio(300) // matarlo
+    
+    const proyectil = new ProyectilVerdura(
+      position = game.at(2, 2),
+      danio = 20,
+      velocidad = 1,
+      mapa = mapaDeTest
+    )
+    
+    proyectil.actualizar() // x=3
+    proyectil.actualizar() // x=4, zombie muerto → no impacta
+    assert.notThat(proyectil.estaMuerto())
+  }
+}
+
+describe "ProyectilVerdura - integración con Verdulero y Mapa" {
+  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
+  const verdulero = new Verdulero(
+    position = game.at(2, 3),
+    vida = 50,
+    costo = 10,
+    danio = 20,
+    mapa = mapaDeTest,
+    intervaloDeColocacion = 5,
+    intervaloDeAccion = 10
+  )
+  
+  method initialize() {
+    mapaDeTest.crearCasilleros()
+  }
+  
+  test "al disparar, el proyectil queda registrado en el mapa" {
+    verdulero.disparar()
+    assert.equals(1, mapaDeTest.proyectiles().size())
+  }
+  
+  test "el proyectil recién disparado tiene el daño del Verdulero" {
+    verdulero.disparar()
+    const proyectil = mapaDeTest.proyectiles().first()
+    assert.equals(20, proyectil.danio())
+  }
+  
+  test "el proyectil recién disparado tiene la posición del Verdulero" {
+    verdulero.disparar()
+    const proyectil = mapaDeTest.proyectiles().first()
+    assert.equals(game.at(2, 3), proyectil.position())
+  }
+  
+  test "disparar dos veces genera dos proyectiles distintos" {
+    verdulero.disparar()
+    verdulero.disparar()
+    assert.equals(2, mapaDeTest.proyectiles().size())
+  }
+}
