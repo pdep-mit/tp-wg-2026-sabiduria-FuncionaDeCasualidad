@@ -15,7 +15,7 @@ class Verdulero {
   const property mapa
   const property intervaloDeColocacion
   const property intervaloDeAccion
-  const property velocidadDeProyectil = 1
+  const property velocidadDeProyectil = 0.25
   var ticksDesdeUltimaAccion = 0
   const animacion = new Animacion(
     imagenQuieta = "verdulero_quieto.png",
@@ -73,7 +73,6 @@ class Verdulero {
   
   method atacar(zombie) {
     self.animarAtaque(zombie)
-    self.disparar(zombie)
   }
   
   // Crea un proyectil propio del Verdulero y lo registra en el juego.
@@ -91,11 +90,8 @@ class Verdulero {
   }
   
   method animarAtaque(zombie) {
-    animacion.iniciar({ =>
-      if (!zombie.estaMuerto()) {
-        zombie.recibirDanio(danio)
-      }
-    })
+    // El callback se ejecuta al entrar al tercer y último cuadro.
+    animacion.iniciar({ => self.disparar(zombie) })
   }
 } // Panadero: barrera defensiva de alta vida. Deja un canasto de
 
@@ -166,7 +162,7 @@ class Vendecursos {
   const animacion = new Animacion(
     imagenQuieta = "vendecursos_quieto.png",
     cuadros = ["vendecursos_salto_0.png", "vendecursos_salto_1.png"],
-    ticksPorCuadro = 60
+    ticksPorCuadro = 20
   )
   
   method image() = animacion.image()

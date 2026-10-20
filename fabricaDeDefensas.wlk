@@ -2,6 +2,7 @@ import wollok.game.*
 import defensas.*
 
 // Concentra los valores de balance y crea una instancia nueva por colocación.
+// Los intervalos se expresan en ticks a razón de 60 por segundo.
 class FabricaDeDefensas {
   const mapa
   const sistemaDePesos
@@ -29,7 +30,7 @@ class FabricaDeDefensas {
         danio = 20,
         mapa = mapa,
         intervaloDeColocacion = 90,
-        intervaloDeAccion = 90
+        intervaloDeAccion = 30
       )
     }
     if (tipo == "panadero") {

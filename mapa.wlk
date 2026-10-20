@@ -1,26 +1,21 @@
 import wollok.game.*
+import entidades.*
 
 // Las clases visuales traducen columna/fila a x/y de wollok.game.
 class Mapa {
   const property filas
   const property columnas
   const property casilleros = []
-  const property zombies = []
-  var defensasActivas = []
-  // Lista de proyectiles activos en el mapa (cualquier tipo de defensa).
-  const property proyectilesActivos = []
+  const property entidades = new Entidades()
 
   method crearCasilleros() {
     casilleros.clear()
-    // Los casilleros comparten esta lista para sincronizar también cambios directos.
-    // Reemplazarla aísla a los casilleros de la grilla anterior.
-    defensasActivas = []
-    proyectilesActivos.clear()
+    entidades.reiniciarMapa()
     game.ground("tile_centro.png")
 
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
-        casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = defensasActivas))
+        casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = entidades.defensasActivas()))
       })
     })
   }
@@ -38,11 +33,16 @@ class Mapa {
 
   method puedeColocarDefensaEn(fila, columna) {
     const casillero = self.casilleroEn(fila, columna)
-    return self.contiene(fila, columna) and casillero != null and not casillero.estaOcupado()
+    return self.contiene(fila, columna) and columna < columnas - 1
+      and casillero != null and not casillero.estaOcupado()
+      and not self.zombies().any({ zombie =>
+        not zombie.estaMuerto() and zombie.position().x() == columna
+          and zombie.position().y() == fila
+      })
   }
 
   method colocarDefensa(defensa, fila, columna) {
-    if (defensasActivas.contains(defensa)) {
+    if (entidades.defensasActivas().contains(defensa)) {
       self.error("La defensa ya está colocada en el mapa.")
     }
     if (!self.puedeColocarDefensaEn(fila, columna)) {
@@ -60,32 +60,34 @@ class Mapa {
 
   method defensas() {
     // Devolver una copia protege la colección y permite retirar durante un recorrido.
-    return defensasActivas.copy()
+    return entidades.defensas()
   }
 
   method agregarZombie(zombie) {
-    zombies.add(zombie)
+    entidades.agregarZombie(zombie)
   }
 
   method quitarZombie(zombie) {
-    zombies.remove(zombie)
+    entidades.quitarZombie(zombie)
   }
 
+  method zombies() = entidades.zombies()
+
   method agregarProyectil(proyectil) {
-    proyectilesActivos.add(proyectil)
+    entidades.agregarProyectil(proyectil)
   }
 
   method quitarProyectil(proyectil) {
-    proyectilesActivos.remove(proyectil)
+    entidades.quitarProyectil(proyectil)
   }
 
   // Devuelve una copia protegida para iterar de forma segura.
   method proyectiles() {
-    return proyectilesActivos.copy()
+    return entidades.proyectiles()
   }
 
   method zombiesEnLinea(fila) {
-    return zombies.filter({ zombie => zombie.position().y() == fila })
+    return self.zombies().filter({ zombie => zombie.position().y() == fila })
   }
 
   method zombiesEnRango(fila, columna, alcance) {
@@ -106,7 +108,7 @@ class Mapa {
   }
 
   method algunZombieLlegoALaCasa() {
-    return zombies.any({ zombie => zombie.llegoALaCasa() })
+    return entidades.algunZombieLlegoALaCasa()
   }
 }
 

@@ -11,7 +11,7 @@
 import wollok.game.*
 
 class ProyectilVerdura {
-  const imagen = "verdura_proyectil.png"
+  const imagen = "tomate_alto.png"
   var property position // posición inicial: la celda del Verdulero
   const property danio // daño que inflige al impactar
   const property velocidad // casillas que avanza por tick
