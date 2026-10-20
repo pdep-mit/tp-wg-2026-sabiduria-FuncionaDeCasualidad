@@ -16,12 +16,13 @@ class Mapa {
     // Reemplazarla aísla a los casilleros de la grilla anterior.
     defensasActivas = []
     proyectilesActivos.clear()
-    game.ground("tile_centro.png")
+    game.ground("marco-1.png")
 
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
-        casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = defensasActivas))
-      })
+        const casillero = new Casillero(fila = f, columna = c, defensasActivas = defensasActivas)
+      casilleros.add(casillero)
+      game.addVisual(casillero)})
     })
   }
 
@@ -120,7 +121,14 @@ class Casillero {
   method defensa() = defensa
 
   method position() = game.at(columna, fila)
-  method image() = imagen
+ method image() = 
+ if (columna == 0 and fila == 4) "casa-1.png" 
+ else if (columna == 0 and fila == 3) "casa-2.png"
+ else if (columna == 0 and fila == 2) "casa-3.png"
+ else if (columna == 0 and fila == 1) "casa-4.png"
+ else if (columna == 0 and fila == 0) "casa-5.png"
+ else if (fila ==2 and columna %2 !== 0) "calle-2.png"
+ else "calle-1.png"
 
   method estaOcupado() = defensa != null
 

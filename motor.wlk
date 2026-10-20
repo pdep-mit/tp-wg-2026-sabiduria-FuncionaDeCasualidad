@@ -146,6 +146,7 @@ class IndicadorDePartida {
                   else "Perdiste: llegaron a la casa"
 
   method textColor() = if (motorDeJuego.enCurso()) "FFFFFF" else "FF5555"
+  method fontSize() = 50
 }
 
 class GeneradorDeZombies {
