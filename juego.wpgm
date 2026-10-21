@@ -16,11 +16,11 @@ program ConurbanoVsZombies {
 	const pesosDeJuego = new SistemaDePesos(
 		pesosDisponibles = 100,
 		pesosPorGeneracion = 25,
-		intervaloDeGeneracion = 50
+		intervaloDeGeneracion = 120
 	)
 	const generador = new GeneradorDeZombies(
 		mapa = mapaDeJuego,
-		intervaloDeAparicion = 100
+		intervaloDeAparicion = 300
 	)
 
 	motor.iniciar(mapaDeJuego, pesosDeJuego, generador)

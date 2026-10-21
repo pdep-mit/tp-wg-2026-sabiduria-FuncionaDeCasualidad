@@ -5,10 +5,10 @@ class Zombie {
   var property vida
   var property casillasPorPaso = 1
   const property mapa
-  const ticksEntrePasos = 100
+  const ticksEntrePasos = 120 // 2 segundos a 60 ticks por segundo
   var ticksDesdeUltimoPaso = 0
   const property danio
-  const property intervaloDeAtaque = 2
+  const property intervaloDeAtaque = 30 // medio segundo entre mordiscos
   var ticksDesdeUltimoAtaque = 0
   var ticksAnimacionDanio = 0
   const imagenDanio 
@@ -62,16 +62,16 @@ class Zombie {
   }
 
   method avanzar() {
-    const siguienteColumna = (position.x() - casillasPorPaso).max(1)
-    // Busca en todo el tramo del paso: no depende de igualdades decimales.
+    const siguienteColumna = (position.x() - casillasPorPaso).max(0)
+    // Busca en todo el tramo del paso dónde debe frenar frente a una defensa.
     const defensasEnElPaso = mapa.defensas().filter({ defensa =>
       !defensa.estaMuerta() and defensa.position().y() == position.y()
-        and defensa.position().x().between(siguienteColumna, position.x())
+        and (defensa.position().x() + 1).between(siguienteColumna, position.x())
     }).sortedBy({ primera, segunda => primera.position().x() > segunda.position().x() })
     if (defensasEnElPaso.isEmpty()) {
       position = game.at(siguienteColumna, position.y())
     } else {
-      position = game.at(defensasEnElPaso.first().position().x(), position.y())
+      position = game.at(defensasEnElPaso.first().position().x() + 1, position.y())
     }
   }
 
@@ -84,13 +84,14 @@ class Zombie {
   }
 
   method defensaAlcanzada() {
-    const defensa = mapa.defensaEn(position.y(), position.x())
+    // El zombie muerde a la defensa que está justo a su izquierda.
+    const defensa = mapa.defensaEn(position.y(), position.x() - 1)
     return if (defensa != null and !defensa.estaMuerta()) defensa else null
   }
 
   method atacar(defensa) {
     ticksDesdeUltimoAtaque += 1
-    if (ticksDesdeUltimoAtaque % 2 == 0) {
+    if (ticksDesdeUltimoAtaque <= intervaloDeAtaque / 2) {
       imagenZombieActual = imagenZombieAtaca1
     } else {
       imagenZombieActual = imagenZombieAtaca2
@@ -103,14 +104,14 @@ class Zombie {
 
   method recibirDanio(cantidad) {
     vida = (vida - cantidad).max(0)
-    ticksAnimacionDanio = 2
+    ticksAnimacionDanio = 12
   }
 
   method estaMuerto() = vida <= 0
 
   method bloqueaGeneracionDePesos() = false
 
-  method llegoALaCasa() = position.x() <= 1
+  method llegoALaCasa() = position.x() <= 0
 }
 
 class ZombieComun inherits Zombie (

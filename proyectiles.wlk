@@ -1,22 +1,13 @@
-// Proyectil lanzado por el Panadero.
-// El Panadero es una barrera pasiva y NO dispara proyectiles;
-// esta clase queda reservada para usos futuros (ej. versión ofensiva).
-// ─────────────────────────────────────────────────────────────────────────────
-// (sin implementación por ahora)
-// Proyectil lanzado por el Panadero.
-// El Panadero es una barrera pasiva y NO dispara proyectiles;
-// esta clase queda reservada para usos futuros (ej. versión ofensiva).
-// ─────────────────────────────────────────────────────────────────────────────
-// (sin implementación por ahora)
+// Proyectil lanzado por el Verdulero.
+// Avanza hacia la derecha por tick; impacta al primer zombie vivo en su fila.
 import wollok.game.*
 
 class ProyectilVerdura {
-  const imagen = "verdura_proyectil.png"
+  const imagen = "tomate_alto.png"
   var property position // posición inicial: la celda del Verdulero
   const property danio // daño que inflige al impactar
   const property velocidad // casillas que avanza por tick
-  const property objetivo // zombie al que persigue
-  const property mapa // referencia al mapa para chequear colisiones
+  const property mapa // referencia al mapa para consultar colisiones
   var muerto = false
   
   method image() = imagen
@@ -29,36 +20,35 @@ class ProyectilVerdura {
       return
     }
     
-    
-    
-    // Avanza hacia la derecha en la misma fila.
-    const nuevaX = position.x() + velocidad
+    const xAnterior = position.x()
+    const nuevaX = xAnterior + velocidad
     position = game.at(nuevaX, position.y())
     
-    
-    
-    // Impacto: el proyectil alcanzó o superó la columna del objetivo.
-    if (position.x() >= objetivo.position().x()) {
-      self.impactar()
+    const zombieImpactado = self.buscarZombieImpactado(xAnterior, nuevaX)
+    if (zombieImpactado != null) {
+      self.impactar(zombieImpactado)
       return
     }
     
-    
-    
-    // Salió del mapa sin impactar -> se descarta.
     if (position.x() >= mapa.columnas()) {
       muerto = true
     }
     return
   }
   
-  method impactar() {
-    if (!objetivo.estaMuerto()) objetivo.recibirDanio(danio)
+  // Devuelve el zombie vivo más cercano (menor x) dentro del tramo recorrido,
+  // o null si no hay ninguno en ese rango en la misma fila.
+  method buscarZombieImpactado(xDesde, xHasta) {
+    const candidatos = mapa.zombiesEnLinea(position.y()).filter(
+      { zombie =>
+        ((!zombie.estaMuerto()) and (zombie.position().x() > xDesde)) and (zombie.position().x() <= xHasta) }
+    ).sortedBy({ z1, z2 => z1.position().x() < z2.position().x() })
+    
+    return if (candidatos.isEmpty()) null else candidatos.first()
+  }
+  
+  method impactar(zombie) {
+    zombie.recibirDanio(danio)
     muerto = true
   }
 }
-// ─────────────────────────────────────────────────────────────────────────────// ─────────────────────────────────────────────────────────────────────────────// Proyectil lanzado por el Panadero.
-// El Panadero es una barrera pasiva y NO dispara proyectiles;
-// esta clase queda reservada para usos futuros (ej. versión ofensiva).
-// ─────────────────────────────────────────────────────────────────────────────
-// (sin implementación por ahora)
