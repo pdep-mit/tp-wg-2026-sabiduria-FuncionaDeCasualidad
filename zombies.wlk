@@ -109,7 +109,7 @@ class Zombie {
 
   method estaMuerto() = vida <= 0
 
-  method bloqueaGeneracionDePesos() = false
+  method esInspector() = false
 
   method llegoALaCasa() = position.x() <= 0
 }
@@ -203,5 +203,5 @@ class ZombieInspector inherits Zombie (
   imagenZombieAtaca1 = "zombieInspector_ataque_1.png",
   imagenZombieAtaca2 = "zombieInspector_ataque_2.png") {
 
-    override method bloqueaGeneracionDePesos() = !self.estaMuerto()
+    override method esInspector() = true
 }

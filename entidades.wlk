@@ -48,6 +48,7 @@ class Entidades {
     self.actualizarGrupo(recargasDeDefensas.copy())
     self.eliminarRecargasTerminadas()
     self.actualizarGrupo([sistemaDePesos])
+    self.actualizarBloqueoVendeCursos()
     self.actualizarGrupo(self.defensas())
     // Se consultan después de las defensas para incluir los disparos de este tick.
     self.actualizarGrupo(self.proyectiles())
@@ -61,6 +62,22 @@ class Entidades {
     if (generadorDeZombies == null) { return true }
     self.actualizarGrupo([generadorDeZombies])
     return true
+  }
+
+  method actualizarBloqueoVendeCursos() {
+    const hayInspector = self.zombies().any({ zombie => 
+    zombie.esInspector() and !zombie.estaMuerto()
+    })
+
+    self.defensas().forEach({ defensa => 
+    if (defensa.tipo() == "vendecursos") {
+      if (hayInspector) {
+        defensa.bloquear()
+      } else {
+        defensa.desbloquear()
+      }
+    }
+    })
   }
 
   method actualizarGrupo(grupo) {

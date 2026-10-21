@@ -20,7 +20,7 @@ program ConurbanoVsZombies {
 	)
 	const generador = new GeneradorDeZombies(
 		mapa = mapaDeJuego,
-		intervaloDeAparicion = 300
+		intervaloDeAparicion = 150
 	)
 
 	motor.iniciar(mapaDeJuego, pesosDeJuego, generador)
