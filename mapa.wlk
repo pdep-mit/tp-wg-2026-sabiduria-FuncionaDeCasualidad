@@ -11,14 +11,17 @@ class Mapa {
   method crearCasilleros() {
     casilleros.clear()
     entidades.reiniciarMapa()
-    game.ground("tile_centro.png")
+    game.ground("marco-1.png")
 
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
-        casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = entidades.defensasActivas()))
+        const casillero= new Casillero(fila = f, columna = c, defensasActivas = entidades.defensasActivas())
+        casilleros.add(casillero)
+        game.addVisual(casillero)
       })
     })
   }
+
 
   method casilleroEn(fila, columna) {
     if (!self.contiene(fila, columna)) { return null }
