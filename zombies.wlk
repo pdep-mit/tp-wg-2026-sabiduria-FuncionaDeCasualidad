@@ -66,12 +66,12 @@ class Zombie {
     // Busca en todo el tramo del paso dónde debe frenar frente a una defensa.
     const defensasEnElPaso = mapa.defensas().filter({ defensa =>
       !defensa.estaMuerta() and defensa.position().y() == position.y()
-        and (defensa.position().x() + 1).between(siguienteColumna, position.x())
+        and (defensa.position().x()).between(siguienteColumna, position.x())
     }).sortedBy({ primera, segunda => primera.position().x() > segunda.position().x() })
     if (defensasEnElPaso.isEmpty()) {
       position = game.at(siguienteColumna, position.y())
     } else {
-      position = game.at(defensasEnElPaso.first().position().x() + 1, position.y())
+      position = game.at(defensasEnElPaso.first().position().x(), position.y())
     }
   }
 
@@ -84,8 +84,8 @@ class Zombie {
   }
 
   method defensaAlcanzada() {
-    // El zombie muerde a la defensa que está justo a su izquierda.
-    const defensa = mapa.defensaEn(position.y(), position.x() - 1)
+    // El zombie ataca a la defensa cuando esta en la misma posicion
+    const defensa = mapa.defensaEn(position.y(), position.x())
     return if (defensa != null and !defensa.estaMuerta()) defensa else null
   }
 

@@ -5,7 +5,7 @@ import defensas.*
 describe "Test de ZombieComun" {
     const unMapa = new Mapa(filas = 9, columnas = 20)
     const unZombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
-    const zombieGanador = new ZombieComun(position = game.at(1, 2), mapa = unMapa)
+    const zombieGanador = new ZombieComun(position = game.at(0, 2), mapa = unMapa)
     const zombieAtaque = new ZombieComun(position = game.at(5, 2), mapa = unMapa)
     const zombie = new ZombieComun(position = game.at(10,2), mapa = unMapa)
 test "Un zombie común recien creado inicia con 300 de vida" {
@@ -20,7 +20,7 @@ test "Un zombie recibe daño correctamente restando su vida y activa la animaci�
     assert.equals("zombieComun_recibe_ataque.png", unZombie.image())
 }
 
-test "El zombie llega a la casa cuando esta en la columna 1 y festeja" {
+test "El zombie llega a la casa cuando esta en la columna 0 y festeja" {
     unMapa.crearCasilleros()
     assert.that(zombieGanador.llegoALaCasa())
     zombieGanador.actualizar()
@@ -40,8 +40,7 @@ test "El zombie ataca a la defensa en su casillero y reduce su vida en 10" {
         )
 
     unMapa.colocarDefensa(verdulero, 2, 5)
-    zombieAtaque.actualizar()
-    zombieAtaque.actualizar()
+    30.times({ i => zombieAtaque.actualizar()})
     assert.equals(40, verdulero.vida())
     
 }
@@ -52,5 +51,83 @@ test "Un zombie esta muerto cuando su vida llego a 0" {
     assert.that(zombie.estaMuerto())
 }
 
+}
 
+describe "Test de ZombieAlbanil" {
+    const unMapa = new Mapa(filas = 9, columnas = 20)
+    test "Un zombie albañil inicia con 600 de vida" {
+        const zombie = new ZombieAlbanil(position = game.at(10,2), mapa = unMapa)
+        assert.equals(600, zombie.vida())
+    }
+
+    test "Un zombie albañil recibe daño correctamente" {
+        const zombie = new ZombieAlbanil(position = game.at(10,2), mapa = unMapa)
+        zombie.recibirDanio(200)
+        assert.equals(400, zombie.vida())
+        assert.equals("zombieAlbanil_recibe_ataque.png", zombie.image())
+    }
+
+    test "Un zombie albañil muere cuando pierde toda su vida" {
+        const zombie = new ZombieAlbanil(position = game.at(10,2), mapa = unMapa)
+        zombie.recibirDanio(600)
+        assert.that(zombie.estaMuerto())
+    }
+
+    test "Un zombie albañil reconoce cuando llega a la casa" {
+        const zombie = new ZombieAlbanil(position = game.at(0,2), mapa = unMapa)
+        zombie.actualizar()
+        assert.that(zombie.llegoALaCasa())
+        assert.equals("zombieAlbanil_gana.png", zombie.image())
+    }
+}
+
+describe "Test de ZombieMotoquero" {
+    const unMapa = new Mapa(filas = 9, columnas = 20)
+    test "Un zombie motoquero inicia con 300 de vida" {
+        const zombie = new ZombieMotoquero(position = game.at(10, 2), mapa = unMapa)
+        assert.equals(300, zombie.vida())
+    }
+    
+    test "Un zombie motoquero recibe daño correctamente" {
+        const zombie = new ZombieMotoquero(position = game.at(10, 2), mapa = unMapa)
+        zombie.recibirDanio(100)
+        assert.equals(200, zombie.vida())
+    }
+    
+    test "Un zombie motoquero muere cuando pierde toda su vida" {
+        const zombie = new ZombieMotoquero(position = game.at(10, 2), mapa = unMapa)
+        zombie.recibirDanio(300)
+        assert.that(zombie.estaMuerto())
+    }
+}
+
+describe "Test de ZombieInspector" {
+    const unMapa = new Mapa(filas = 9, columnas = 20)
+    test "Un zombie inspector inicia con 300 de vida" {
+        const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
+        assert.equals(300, zombie.vida())
+    }
+    
+    test "Un zombie inspector se identifica como inspector" {
+        const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
+        assert.that(zombie.esInspector())
+    }
+    
+    test "Un zombie inspector recibe daño correctamente" {
+        const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
+        zombie.recibirDanio(100)
+        assert.equals(200, zombie.vida())
+        assert.equals("zombieInspector_recibe_ataque.png", zombie.image())
+    }
+    
+    test "Un zombie inspector muere cuando pierde toda su vida" {
+        const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
+        zombie.recibirDanio(300)
+        assert.that(zombie.estaMuerto())
+    }
+    
+    test "Un zombie comun no se identifica como inspector" {
+        const zombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
+        assert.notThat(zombie.esInspector())
+    }
 }
