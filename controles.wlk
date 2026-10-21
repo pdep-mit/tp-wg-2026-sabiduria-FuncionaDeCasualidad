@@ -16,6 +16,7 @@ object controles {
     keyboard.num1().onPressDo({ self.seleccionarDefensa(1) })
     keyboard.num2().onPressDo({ self.seleccionarDefensa(2) })
     keyboard.num3().onPressDo({ self.seleccionarDefensa(3) })
+    keyboard.r().onPressDo({ motorDeJuego.alternarVelocidad() })
     keyboard.up().onPressDo({ self.moverCursor(0, 1) })
     keyboard.down().onPressDo({ self.moverCursor(0, -1) })
     keyboard.left().onPressDo({ self.moverCursor(-1, 0) })

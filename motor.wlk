@@ -10,6 +10,7 @@ object motor {
   var property entidades = null
   var property enCurso = false
   var property gano = false
+  var property velocidadDoble = false
 
   method iniciar(unMapa, unSistemaDePesos, unGeneradorDeZombies) {
     mapa = unMapa
@@ -19,6 +20,16 @@ object motor {
     entidades.configurar(mapa, sistemaDePesos, unGeneradorDeZombies)
     enCurso = true
     gano = false
+    velocidadDoble = false
+  }
+
+  method alternarVelocidad() {
+    if (enCurso) { velocidadDoble = not velocidadDoble }
+  }
+
+  method actualizarSegunVelocidad() {
+    self.actualizar()
+    if (velocidadDoble) { self.actualizar() }
   }
 
   method actualizar() {
@@ -112,6 +123,15 @@ class IndicadorDePartida {
   method fontSize() = 50
 }
 
+class IndicadorDeVelocidad {
+  const property position
+  const motorDeJuego
+
+  method text() = if (motorDeJuego.velocidadDoble()) "2x" else "1x"
+  method textColor() = if (motorDeJuego.velocidadDoble()) "FFFF00" else "FFFFFF"
+  method fontSize() = 35
+}
+
 class GeneradorDeZombies {
   var zombiesGenerados = 0
   var oleadaActual = 1
@@ -125,9 +145,14 @@ class GeneradorDeZombies {
       ticksDesdeUltimaAparicion += 1
       
       if (ticksDesdeUltimaAparicion >= intervaloDeAparicion) {
-      self.generarZombie()
-      zombiesGenerados += 1
-      ticksDesdeUltimaAparicion = 0
+        if (oleadaActual == 4) {
+          self.generarOleadaFinal()
+          zombiesGenerados += cantidadDeZombies
+        } else {
+          self.generarZombie()
+          zombiesGenerados += 1
+        }
+        ticksDesdeUltimaAparicion = 0
       }
     }
 
@@ -183,17 +208,27 @@ class GeneradorDeZombies {
 
   method iniciarOleadaFinal() {
     oleadaActual = 4
-    cantidadDeZombies = 1
+    cantidadDeZombies = 5
     zombiesGenerados = 0
     ticksDesdeUltimaAparicion = 0
   }
 
-  method generarZombie() {
-    const posicion = game.at(mapa.columnas() -1, self.elegirFila())
+  method generarOleadaFinal() {
+    const filaDelInspector = self.elegirFila()
+    self.agregarZombie(new ZombieInspector(
+      position = game.at(mapa.columnas() - 1, filaDelInspector), mapa = mapa
+    ))
+    (0 .. (mapa.filas() - 1)).filter({ fila => fila != filaDelInspector }).forEach({ fila =>
+      self.agregarZombie(new ZombieMotoquero(
+        position = game.at(mapa.columnas() - 1, fila), mapa = mapa
+      ))
+    })
+  }
 
-    const zombie = if (oleadaActual == 4) {
-      new ZombieInspector(position = posicion, mapa = mapa)
-    } else if (oleadaActual == 3) {
+  method generarZombie() {
+    const posicion = game.at(mapa.columnas() - 1, self.elegirFila())
+
+    const zombie = if (oleadaActual == 3) {
       if (zombiesGenerados < 3) {
         new ZombieComun(position = posicion, mapa = mapa)
       } else if (zombiesGenerados < 6) {
@@ -201,21 +236,24 @@ class GeneradorDeZombies {
       } else {
         new ZombieMotoquero(position = posicion, mapa = mapa)
       }
-  } else if (oleadaActual == 2 and zombiesGenerados >= 4) {
-    new ZombieAlbanil(position = posicion, mapa = mapa)
-  } else {
-    new ZombieComun(position = posicion, mapa = mapa)
+    } else if (oleadaActual == 2 and zombiesGenerados >= 4) {
+      new ZombieAlbanil(position = posicion, mapa = mapa)
+    } else {
+      new ZombieComun(position = posicion, mapa = mapa)
+    }
+    self.agregarZombie(zombie)
   }
-  mapa.agregarZombie(zombie)
-  game.addVisual(zombie)
-    
+
+  method agregarZombie(zombie) {
+    mapa.agregarZombie(zombie)
+    game.addVisual(zombie)
   }
   method elegirFila() = (0 .. (mapa.filas() - 1)).anyOne()
 
   method jefeFinalDerrotado() {
     return oleadaActual == 4 and
       zombiesGenerados == cantidadDeZombies and 
-      mapa.entidades().zombies().isEmpty()
+      not mapa.entidades().zombies().any({ zombie => zombie.esInspector() and not zombie.estaMuerto() })
   }
   
 }

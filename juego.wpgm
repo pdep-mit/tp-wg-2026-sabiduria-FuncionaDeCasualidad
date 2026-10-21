@@ -26,13 +26,14 @@ program ConurbanoVsZombies {
 	motor.iniciar(mapaDeJuego, pesosDeJuego, generador)
 	controles.iniciar(motor)
 	const indicadores = [
+		new IndicadorDeVelocidad(position = game.at(0, 5), motorDeJuego = motor),
 		new IndicadorDePesos(position = game.at(1, 5), sistemaDePesos = pesosDeJuego),
 		new IndicadorDePartida(position = game.at(4, 5), motorDeJuego = motor),
 		new IndicadorDeSeleccion(position = game.at(7, 5), controlesDeJuego = controles)
 	]
 	indicadores.forEach({ indicador => game.addVisual(indicador) })
 
-	game.onTick(milisegundosPorTick, "actualizarMotor", { => motor.actualizar() })
+	game.onTick(milisegundosPorTick, "actualizarMotor", { => motor.actualizarSegunVelocidad() })
 	
 	game.start()
 }

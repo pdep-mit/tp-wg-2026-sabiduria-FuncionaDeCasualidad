@@ -140,7 +140,7 @@ describe "ProyectilVerdura - colisión e impacto" {
     )
     
     // Avanzar hasta colisionar (x=3,4,5)
-    3.times({ proyectil.actualizar() })
+    3.times({ i => proyectil.actualizar() })
     
     assert.that(proyectil.estaMuerto())
     assert.equals(250, zombieCercano.vida()) // recibió 50 de daño
@@ -205,9 +205,24 @@ describe "ProyectilVerdura - integración con Verdulero y Mapa" {
     mapaDeTest.crearCasilleros()
   }
   
-  test "al disparar, el proyectil queda registrado en el mapa" {
-    verdulero.disparar()
+  test "el verdulero dispara al entrar al tercer cuadro y el daño llega con el impacto" {
+    const objetivo = new ZombieComun(position = game.at(4, 3), mapa = mapaDeTest)
+    mapaDeTest.agregarZombie(objetivo)
+    verdulero.atacar(objetivo)
+
+    7.times({ i => verdulero.actualizar() })
+    assert.equals(0, mapaDeTest.proyectiles().size())
+    assert.equals(300, objetivo.vida())
+
+    verdulero.actualizar()
     assert.equals(1, mapaDeTest.proyectiles().size())
+    const proyectil = mapaDeTest.proyectiles().first()
+    assert.that(game.hasVisual(proyectil))
+    assert.equals("tomate_alto.png", proyectil.image())
+    assert.equals(300, objetivo.vida())
+
+    8.times({ i => proyectil.actualizar() })
+    assert.equals(280, objetivo.vida())
   }
   
   test "el proyectil recién disparado tiene el daño del Verdulero" {

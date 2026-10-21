@@ -31,35 +31,42 @@ Con Wollok instalado, ejecutar `wollok run juego.ConurbanoVsZombies -p ./`.
 
 ## Objetivo
 
-Evitá que los zombies, que avanzan de derecha a izquierda, alcancen la columna 1.
+Evitá que los zombies, que avanzan de derecha a izquierda, alcancen la columna 0.
 El Vendecursos genera ingresos, el Verdulero ataca al zombie vivo más cercano
-delante suyo en su fila y el Panadero absorbe mordiscos. Conviene colocar
-defensas desde la columna 2 hacia la derecha. Al llegar un zombie a la casa,
-aparece el mensaje de derrota y la partida se detiene. Para volver a jugar,
-ejecutar nuevamente el programa.
+delante suyo en su fila y el Panadero absorbe mordiscos. Los zombies se detienen
+en la casilla a la derecha de una defensa para atacarla. Al llegar un zombie
+a la casa, aparece el mensaje de derrota y la partida se detiene. Para volver
+a jugar, ejecutar nuevamente el programa.
 
 ## Controles
 
-- `1`: seleccionar Vendecursos (25 pesos).
-- `2`: seleccionar Verdulero (10 pesos).
-- `3`: seleccionar Panadero (5 pesos).
+- `1`: seleccionar Vendecursos (50 pesos).
+- `2`: seleccionar Verdulero (100 pesos).
+- `3`: seleccionar Panadero (50 pesos).
 - Flechas: mover el cursor amarillo `+`, que comienza en la casilla `(0, 0)`.
 - `Enter`: colocar la defensa seleccionada en la casilla del cursor.
+- `R`: alternar entre velocidad normal y 2x; la franja inferior muestra el modo activo.
 
-La colocación requiere una casilla libre y pesos suficientes. Si no se puede
-colocar, no se descuenta dinero. La selección se conserva para colocar más
-defensas. La recarga es independiente por tipo: 5 ticks para Vendecursos y
-Verdulero, 30 para Panadero. La franja superior muestra saldo, estado de la
-partida y selección con su estado de recarga.
+En 2x avanzan el doble de rápido los zombies, proyectiles, recargas, ataques y
+la generación de pesos.
+
+La colocación requiere una casilla libre, sin zombies y fuera de la última
+columna, reservada para su aparición, además de pesos suficientes. Si no se
+puede colocar, no se descuenta dinero. La selección se conserva para colocar más
+defensas. La recarga es independiente por tipo: 60 ticks (1 segundo) para
+Vendecursos y Verdulero, 300 ticks (5 segundos) para Panadero. La franja
+superior muestra saldo, estado de la partida y selección con su recarga.
 
 ## Economía y tiempos
 
-Cada tick dura 100 ms. Se empieza con 100 pesos y se reciben 25 cada 50 ticks.
-Cada Vendecursos agrega 25 pesos cada 10 ticks. El Verdulero hace 20 de daño
-cada 10 ticks; el Panadero tiene 300 de vida. Aparecen zombies comunes cada
-30 ticks en una fila aleatoria, además del zombie inicial en la fila central.
-El zombie avanza una casilla entera cada 30 ticks (3 segundos), se detiene
-frente a una defensa y continúa cuando esta es destruida.
+El juego actualiza 60 veces por segundo. Se empieza con 100 pesos y se reciben
+25 cada 120 ticks (2 segundos). Cada Vendecursos inicia una venta cada 120 ticks
+y agrega 25 pesos al llegar al segundo cuadro de su animación. El Verdulero
+inicia un ataque cada 30 ticks (0,5 segundos), lanza el proyectil en el tercer
+cuadro y hace 20 de daño cuando impacta. El Panadero tiene 500 de vida.
+Aparece un zombie común cada 300 ticks (5 segundos) en una fila aleatoria.
+Cada zombie avanza una casilla cada 120 ticks (2 segundos); al alcanzar una
+defensa, le hace 10 de daño cada 30 ticks (0,5 segundos).
 
 ## Verificación
 

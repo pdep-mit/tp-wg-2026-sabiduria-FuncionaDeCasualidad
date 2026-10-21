@@ -16,7 +16,7 @@ class FabricaDeDefensas {
         vida = 100,
         costo = 50,
         mapa = mapa,
-        intervaloDeColocacion = 90,
+        intervaloDeColocacion = 60,
         intervaloDeAccion = 120,
         sistemaDePesos = sistemaDePesos,
         pesosPorVenta = 25
@@ -29,7 +29,7 @@ class FabricaDeDefensas {
         costo = 100,
         danio = 20,
         mapa = mapa,
-        intervaloDeColocacion = 90,
+        intervaloDeColocacion = 60,
         intervaloDeAccion = 30
       )
     }

@@ -15,7 +15,7 @@ class Verdulero {
   const property mapa
   const property intervaloDeColocacion
   const property intervaloDeAccion
-  const property velocidadDeProyectil = 0.25
+  const property velocidadDeProyectil = 0.3
   var ticksDesdeUltimaAccion = 0
   const animacion = new Animacion(
     imagenQuieta = "verdulero_quieto.png",
@@ -90,7 +90,8 @@ class Verdulero {
   }
   
   method animarAtaque(zombie) {
-    animacion.iniciar({ if (!zombie.estaMuerto()) zombie.recibirDanio(danio) })
+    // El proyectil sale al entrar al tercer cuadro de la animación.
+    animacion.iniciar({ => self.disparar() })
   }
 } // Panadero: barrera defensiva de alta vida. Deja un canasto de
 
