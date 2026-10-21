@@ -5,7 +5,7 @@ class Zombie {
   var property vida
   var property casillasPorPaso = 1
   const property mapa
-  const ticksEntrePasos = 120 // 2 segundos a 60 ticks por segundo
+  const ticksEntrePasos = 180 // 3 segundos a 60 ticks por segundo
   var ticksDesdeUltimoPaso = 0
   const property danio
   const property intervaloDeAtaque = 30 // medio segundo entre mordiscos

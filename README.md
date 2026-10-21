@@ -26,8 +26,12 @@ Juego de defensa por líneas desarrollado en Wollok. El checkpoint 1 integra el
 mapa de 5 filas × 9 columnas, las tres defensas, zombies comunes, pesos,
 recargas y derrota. Hay 45 casilleros jugables y una franja superior de estado. Ver la
 [explicación del dominio](explicaciones.md).
+El [diagrama de clases completo](DIAGRAMA_CLASES.md) muestra la estructura actual.
 
 Con Wollok instalado, ejecutar `wollok run juego.ConurbanoVsZombies -p ./`.
+Después de cambiar código o imágenes, detener esa ejecución con `Ctrl+C`,
+volver a ejecutar el comando y recargar la pestaña del juego. Wollok no
+actualiza una partida que ya estaba abierta.
 
 ## Objetivo
 
@@ -43,9 +47,11 @@ a jugar, ejecutar nuevamente el programa.
 - `1`: seleccionar Vendecursos (50 pesos).
 - `2`: seleccionar Verdulero (100 pesos).
 - `3`: seleccionar Panadero (50 pesos).
-- Flechas: mover el cursor amarillo `+`, que comienza en la casilla `(0, 0)`.
+- También se puede elegir una defensa haciendo clic en su retrato del panel superior.
+- Flechas: mover el cursor, que comienza en la casilla `(0, 0)`.
+- La defensa elegida aparece semitransparente en el cursor si la casilla permite colocarla.
 - `Enter`: colocar la defensa seleccionada en la casilla del cursor.
-- `R`: alternar entre velocidad normal y 2x; la franja inferior muestra el modo activo.
+- `R`: alternar entre velocidad normal y 2x; el panel superior muestra el modo activo.
 
 En 2x avanzan el doble de rápido los zombies, proyectiles, recargas, ataques y
 la generación de pesos.
@@ -63,9 +69,10 @@ El juego actualiza 60 veces por segundo. Se empieza con 100 pesos y se reciben
 25 cada 120 ticks (2 segundos). Cada Vendecursos inicia una venta cada 120 ticks
 y agrega 25 pesos al llegar al segundo cuadro de su animación. El Verdulero
 inicia un ataque cada 30 ticks (0,5 segundos), lanza el proyectil en el tercer
-cuadro y hace 20 de daño cuando impacta. El Panadero tiene 500 de vida.
+cuadro y hace 20 de daño cuando impacta. El Panadero tiene 500 de vida y recibe
+un 30% menos de daño.
 Aparece un zombie común cada 300 ticks (5 segundos) en una fila aleatoria.
-Cada zombie avanza una casilla cada 120 ticks (2 segundos); al alcanzar una
+Cada zombie avanza una casilla cada 180 ticks (3 segundos); al alcanzar una
 defensa, le hace 10 de daño cada 30 ticks (0,5 segundos).
 
 ## Verificación

@@ -86,15 +86,15 @@ describe "Panadero - lógica de dominio" {
     assert.equals(300, panadero.vida())
   }
 
-  test "recibir daño reduce la vida" {
+  test "recibe un 30% menos de daño" {
     panadero.recibirDanio(20)
-    assert.equals(280, panadero.vida())
+    assert.equals(286, panadero.vida())
   }
 
   test "aguanta muchos golpes antes de morir" {
-    14.times({ i => panadero.recibirDanio(20) })
+    21.times({ i => panadero.recibirDanio(20) })
     assert.notThat(panadero.estaMuerta())
-    // Un golpe más lo mata (15 * 20 = 300)
+    // Cada golpe de 20 resta 14: el número 22 agota sus 300 de vida.
     panadero.recibirDanio(20)
     assert.that(panadero.estaMuerta())
   }
@@ -103,8 +103,8 @@ describe "Panadero - lógica de dominio" {
     assert.notThat(panadero.estaMuerta())
   }
 
-  test "muere cuando su vida llega a 0" {
-    panadero.recibirDanio(300)
+  test "muere cuando el daño reducido agota su vida" {
+    panadero.recibirDanio(500)
     assert.that(panadero.estaMuerta())
   }
 
@@ -143,7 +143,7 @@ describe "Polimorfismo - actualizar() en defensas diferentes" {
     intervaloDeColocacion = 30
   )
 
-  test "todas las defensas entienden actualizar() sin herencia" {
+  test "todas las defensas entienden actualizar()" {
     // El motor puede enviar el mismo mensaje a cualquier defensa.
     // Este test valida que ambas responden sin error.
     const defensas = [verdulero, panadero]
@@ -152,14 +152,14 @@ describe "Polimorfismo - actualizar() en defensas diferentes" {
     assert.that(true)
   }
 
-  test "todas las defensas entienden recibirDanio() sin herencia" {
+  test "todas las defensas reciben daño" {
     const defensas = [verdulero, panadero]
     defensas.forEach({ defensa => defensa.recibirDanio(10) })
     assert.equals(40, verdulero.vida())
-    assert.equals(290, panadero.vida())
+    assert.equals(293, panadero.vida())
   }
 
-  test "todas las defensas entienden estaMuerta() sin herencia" {
+  test "todas las defensas consultan si están muertas" {
     const defensas = [verdulero, panadero]
     assert.equals([false, false], defensas.map({ defensa => defensa.estaMuerta() }))
   }

@@ -25,11 +25,15 @@ program ConurbanoVsZombies {
 
 	motor.iniciar(mapaDeJuego, pesosDeJuego, generador)
 	controles.iniciar(motor)
+	game.addVisual(new PanelSuperior(position = game.at(0, 5)))
 	const indicadores = [
-		new IndicadorDeVelocidad(position = game.at(0, 5), motorDeJuego = motor),
-		new IndicadorDePesos(position = game.at(1, 5), sistemaDePesos = pesosDeJuego),
-		new IndicadorDePartida(position = game.at(4, 5), motorDeJuego = motor),
-		new IndicadorDeSeleccion(position = game.at(7, 5), controlesDeJuego = controles)
+		new IndicadorDeVelocidad(position = game.at(2, 5), motorDeJuego = motor),
+		new IndicadorDePesos(position = game.at(0, 5), sistemaDePesos = pesosDeJuego, divisor = 1000, lugar = 0),
+		new IndicadorDePesos(position = game.at(1, 5), sistemaDePesos = pesosDeJuego, divisor = 100, lugar = 1),
+		new IndicadorDePesos(position = game.at(1, 5), sistemaDePesos = pesosDeJuego, divisor = 10, lugar = 2),
+		new IndicadorDePesos(position = game.at(1, 5), sistemaDePesos = pesosDeJuego, divisor = 1, lugar = 3),
+		new IndicadorDePartida(position = game.at(3, 5), motorDeJuego = motor),
+		new IndicadorDeSeleccion(position = game.at(6, 5), controlesDeJuego = controles)
 	]
 	indicadores.forEach({ indicador => game.addVisual(indicador) })
 

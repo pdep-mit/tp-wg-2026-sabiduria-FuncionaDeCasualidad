@@ -3,14 +3,13 @@
 import wollok.game.*
 
 class ProyectilVerdura {
-  const imagen = "tomate_alto.png"
-  var property position // posición inicial: la celda del Verdulero
+  var property position
   const property danio // daño que inflige al impactar
   const property velocidad // casillas que avanza por tick
   const property mapa // referencia al mapa para consultar colisiones
   var muerto = false
   
-  method image() = imagen
+  method image() = "tomate_alto.png"
   
   // Indica si el proyectil debe ser retirado del juego.
   method estaMuerto() = muerto
@@ -41,7 +40,7 @@ class ProyectilVerdura {
   method buscarZombieImpactado(xDesde, xHasta) {
     const candidatos = mapa.zombiesEnLinea(position.y()).filter(
       { zombie =>
-        ((!zombie.estaMuerto()) and (zombie.position().x() > xDesde)) and (zombie.position().x() <= xHasta) }
+        ((!zombie.estaMuerto()) and (zombie.position().x() >= xDesde)) and (zombie.position().x() <= xHasta) }
     ).sortedBy({ z1, z2 => z1.position().x() < z2.position().x() })
     
     return if (candidatos.isEmpty()) null else candidatos.first()

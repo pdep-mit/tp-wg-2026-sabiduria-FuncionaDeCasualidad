@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="100" viewBox="0 0 900 100">
+  <!-- Una bandeja continua sobre la vereda, no tarjetas flotantes. -->
+  <rect width="900" height="100" fill="#323136"/>
+  <path d="M0 0H900V91H0Z" fill="#38281f"/>
+  <path d="M4 3H896V88H4Z" fill="#85552f" stroke="#c08a46" stroke-width="3"/>
+  <path d="M5 5H895" stroke="#e4b75a" stroke-width="3"/>
+  <path d="M8 84H892" stroke="#36251d" stroke-width="3"/>
+  <path d="M12 10C100 17 192 8 288 14S490 16 575 10S785 17 886 12" fill="none" stroke="#c28a49" stroke-width="2" opacity=".52"/>
+  <path d="M15 78C132 74 165 82 286 77S516 82 631 76S805 80 885 76" fill="none" stroke="#3f281d" stroke-width="2" opacity=".45"/>
+  <path d="M4 33C86 35 182 30 302 34S540 36 654 31S816 34 895 31" fill="none" stroke="#b47d40" stroke-width="1" opacity=".45"/>
+
+  <!-- Tarjetas de semillero clavadas en la bandeja. -->
+  <path d="M72 15H191L195 19V77L191 81H72L68 77V19Z" fill="#3e2b1e"/>
+  <path d="M75 18H188L192 21V74L188 78H75L72 74V21Z" fill="#ead9a6" stroke="#f9dea2" stroke-width="1"/>
+  <path d="M208 15H316L320 19V77L316 81H208L204 77V19Z" fill="#3e2b1e"/>
+  <path d="M211 18H313L317 21V74L313 78H211L208 74V21Z" fill="#ead9a6" stroke="#f9dea2" stroke-width="1"/>
+  <path d="M334 15H588L592 19V77L588 81H334L330 77V19Z" fill="#3e2b1e"/>
+  <path d="M337 18H585L589 21V74L585 78H337L333 74V21Z" fill="#ead9a6" stroke="#f9dea2" stroke-width="1"/>
+  <path d="M606 15H884L888 19V77L884 81H606L602 77V19Z" fill="#3e2b1e"/>
+  <path d="M609 18H881L885 21V74L881 78H609L605 74V21Z" fill="#ead9a6" stroke="#f9dea2" stroke-width="1"/>
+
+  <!-- Pequeñas franjas verdes enlazan las fichas con el tema de defensa. -->
+  <path d="M73 20H191V25H73Z M209 20H316V25H209Z M334 20H588V25H334Z M606 20H884V25H606Z" fill="#6d913f"/>
+  <path d="M73 25H191 M209 25H316 M334 25H588 M606 25H884" stroke="#355722" stroke-width="2"/>
+
+  <!-- Moneda grande, con borde irregular como los recursos del juego. -->
+  <path d="M35 15L41 18L48 17L53 22L59 24L60 31L65 37L62 44L65 51L61 58L58 66L50 68L44 73L36 70L29 73L22 69L15 65L13 57L9 51L12 43L10 36L15 29L17 23L25 20Z" fill="#56381d" stroke="#e1ae36" stroke-width="2"/>
+  <circle cx="36" cy="44" r="23" fill="#f5cb45" stroke="#ffe58b" stroke-width="3"/>
+  <circle cx="36" cy="44" r="17" fill="none" stroke="#ad7420" stroke-width="2"/>
+  <text x="36" y="52" text-anchor="middle" font-family="Arial" font-size="25" font-weight="bold" fill="#8b5a17">$</text>
+
+  <!-- Rótulos gruesos: los valores grandes se dibujan con sprites delante. -->
+  <g font-family="Impact" fill="#4f381f" text-anchor="middle" font-size="18" letter-spacing="1">
+    <text x="133" y="38">PESOS</text>
+    <text x="260" y="38">RITMO</text>
+    <text x="460" y="38">PARTIDA</text>
+  </g>
+  <path d="M282 28H306V40H282Z" fill="#6e8e3c" stroke="#375323" stroke-width="1"/>
+  <g font-family="Impact" fill="#f4e5ae" text-anchor="middle" font-size="10">
+    <text x="294" y="38">R</text>
+  </g>
+
+  <!-- Clavos y borde de vereda que toca la calle. -->
+  <g fill="#d6ad61" stroke="#57391f" stroke-width="1">
+    <circle cx="81" cy="29" r="2"/><circle cx="183" cy="29" r="2"/>
+    <circle cx="216" cy="29" r="2"/><circle cx="308" cy="29" r="2"/>
+    <circle cx="342" cy="29" r="2"/><circle cx="580" cy="29" r="2"/>
+    <circle cx="614" cy="29" r="2"/><circle cx="876" cy="29" r="2"/>
+  </g>
+  <path d="M0 89H900V96H0Z" fill="#77736d"/>
+  <path d="M0 89H900" stroke="#b4ada1" stroke-width="2"/>
+  <path d="M0 96H900" stroke="#27282c" stroke-width="4"/>
+  <path d="M168 89L165 96M347 89L352 96M622 89L618 96M821 89L825 96" stroke="#44413e" stroke-width="1"/>
+</svg>

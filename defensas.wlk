@@ -1,19 +1,26 @@
 import wollok.game.*
 import proyectiles.*
 
-// Todas las defensas responden a actualizar(). El motor puede enviar
-// ese mismo mensaje a cualquiera de ellas sin preguntar su tipo.
-// No hay herencia ni clase base: el polimorfismo surge de que todas
-// entienden el mismo protocolo.
-// Verdulero: lanza verduras hacia los enemigos en su misma fila.
-// Alcance de toda la línea, daño básico, costo normal.
-class Verdulero {
+// Las defensas comparten estado y manejo de vida. Cada una define
+// su propia acción al actualizarse.
+class Defensa {
   var property position
   var property vida
   const property costo
-  const property danio
   const property mapa
   const property intervaloDeColocacion
+
+  method recibirDanio(cantidad) {
+    vida -= cantidad
+  }
+
+  method estaMuerta() = vida <= 0
+}
+
+// Verdulero: lanza verduras hacia los enemigos en su misma fila.
+// Alcance de toda la línea, daño básico, costo normal.
+class Verdulero inherits Defensa {
+  const property danio
   const property intervaloDeAccion
   const property velocidadDeProyectil = 0.3
   var ticksDesdeUltimaAccion = 0
@@ -30,12 +37,6 @@ class Verdulero {
   method image() = animacion.image()
   
   method tipo() = "verdulero"
-  
-  method recibirDanio(cantidad) {
-    vida -= cantidad
-  }
-  
-  method estaMuerta() = vida <= 0
   
   method puedeActuar() = (ticksDesdeUltimaAccion >= intervaloDeAccion) and (!animacion.estaActiva())
   
@@ -80,7 +81,7 @@ class Verdulero {
   
   method disparar() {
     const proyectil = new ProyectilVerdura(
-      position = position,
+      position = game.at(position.x() + 1, position.y()),
       danio = danio,
       velocidad = velocidadDeProyectil,
       mapa = mapa
@@ -97,14 +98,9 @@ class Verdulero {
 
 // panes viejos que aguanta muchos golpes. Costo barato, recarga alta.
 // No ataca: su función es absorber daño.
-class Panadero {
-  var property position
-  var property vida
-  const property costo
+class Panadero inherits Defensa {
   // El panadero no ataca, pero danio = 0 mantiene el protocolo uniforme.
   const property danio = 0
-  const property mapa
-  const property intervaloDeColocacion
   const animacion = new Animacion(
     imagenQuieta = "panadero_quieto.png",
     cuadros = [
@@ -119,13 +115,12 @@ class Panadero {
   
   method tipo() = "panadero"
   
-  method recibirDanio(cantidad) {
-    vida -= cantidad
+  override method recibirDanio(cantidad) {
+    // Reduce un 30% el daño antes de aplicar la lógica compartida.
+    super(cantidad * 0.7)
     // Se cubre con los panes al recibir daño.
     self.animarDanio()
   }
-  
-  method estaMuerta() = vida <= 0
   
   // Sigue siendo una barrera pasiva; el tick sólo actualiza su imagen.
   method actualizar() {
@@ -148,14 +143,9 @@ class Panadero {
 
 // No ataca directamente. Puede ser bloqueado por un zombie inspector
 // (para una futura iteración).
-class Vendecursos {
-  var property position
-  var property vida
-  const property costo
+class Vendecursos inherits Defensa {
   // No ataca, pero danio = 0 mantiene el protocolo uniforme.
   const property danio = 0
-  const property mapa
-  const property intervaloDeColocacion
   const property intervaloDeAccion
   var ticksDesdeUltimaAccion = 0
   const property sistemaDePesos
@@ -170,12 +160,6 @@ class Vendecursos {
   method image() = animacion.image()
   
   method tipo() = "vendecursos"
-  
-  method recibirDanio(cantidad) {
-    vida -= cantidad
-  }
-  
-  method estaMuerta() = vida <= 0
   
   method puedeActuar() = (ticksDesdeUltimaAccion >= intervaloDeAccion) and (!animacion.estaActiva())
   

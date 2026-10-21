@@ -98,38 +98,22 @@ class IndicadorDePartida {
   const property position
   const motorDeJuego
 
-  method text() {
+  method image() {
     if (motorDeJuego.enCurso()) {
-      return "Defendé la casa"
+      return "hud_estado_jugando.png"
     }
     if (motorDeJuego.gano()) {
-      return "¡Ganaste!"
+      return "hud_estado_ganaste.png"
     }
-    return "Perdiste: llegaron a la casa"
+    return "hud_estado_perdiste.png"
   }
-
-  method textColor() {
-    if (motorDeJuego.enCurso()) {
-      return "FFFFFF"
-    }
-
-    if (motorDeJuego.gano()) {
-      return "00FF00"
-    }
-
-    return "FF5555"
-  }
-
-  method fontSize() = 50
 }
 
 class IndicadorDeVelocidad {
   const property position
   const motorDeJuego
 
-  method text() = if (motorDeJuego.velocidadDoble()) "2x" else "1x"
-  method textColor() = if (motorDeJuego.velocidadDoble()) "FFFF00" else "FFFFFF"
-  method fontSize() = 35
+  method image() = if (motorDeJuego.velocidadDoble()) "hud_ritmo_2x.png" else "hud_ritmo_1x.png"
 }
 
 class GeneradorDeZombies {

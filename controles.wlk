@@ -10,6 +10,9 @@ object controles {
     motorDeJuego = unMotor
     tipoDeDefensaSeleccionada = null
     cursor.position(game.at(0, 0))
+    if (!game.hasVisual(vistaPreviaDeDefensa)) {
+      game.addVisual(vistaPreviaDeDefensa)
+    }
     if (!game.hasVisual(cursor)) {
       game.addVisual(cursor)
     }
@@ -22,6 +25,7 @@ object controles {
     keyboard.left().onPressDo({ self.moverCursor(-1, 0) })
     keyboard.right().onPressDo({ self.moverCursor(1, 0) })
     keyboard.enter().onPressDo({ self.colocarEnCursor() })
+    game.onClickDo({ posicion => self.seleccionarDefensaEnPanel(posicion) })
   }
 
   method moverCursor(deltaColumna, deltaFila) {
@@ -49,6 +53,15 @@ object controles {
     }
   }
 
+  method seleccionarDefensaEnPanel(posicion) {
+    if (posicion.y().roundDown() != 5) { return }
+    const columna = posicion.x().roundDown()
+    if (columna >= 6 and columna <= 8) {
+      self.seleccionarDefensa(columna - 5)
+    }
+    return
+  }
+
   method crearDefensaSeleccionada(fila, columna) {
     const fabrica = new FabricaDeDefensas(
       mapa = if (motorDeJuego != null) motorDeJuego.mapa() else null,
@@ -73,18 +86,41 @@ object controles {
 object cursor {
   var property position = game.at(0, 0)
 
-  method image() = "cursor.png"
+  method image() = if (controles.tipoDeDefensaSeleccionada() == null) "cursor.png" else "cursor_seleccion.png"
+}
+
+object vistaPreviaDeDefensa {
+  method position() = cursor.position()
+
+  method image() {
+    const tipo = controles.tipoDeDefensaSeleccionada()
+    const motorDeJuego = controles.motorDeJuego()
+    if (tipo == null or motorDeJuego == null or not motorDeJuego.enCurso()) {
+      return "defensa_previa_vacia.png"
+    }
+
+    const posicion = self.position()
+    if (not motorDeJuego.mapa().puedeColocarDefensaEn(posicion.y(), posicion.x())) {
+      return "defensa_previa_vacia.png"
+    }
+    return "defensa_previa_" + tipo + ".png"
+  }
+}
+
+class PanelSuperior {
+  const property position
+
+  method image() = "hud_panel.png"
 }
 
 class IndicadorDeSeleccion {
   const property position
   const controlesDeJuego
 
-  method text() {
+  method image() {
     const tipo = controlesDeJuego.tipoDeDefensaSeleccionada()
-    if (tipo == null) { return "Elegí 1 / 2 / 3" }
-    const estado = if (controlesDeJuego.motorDeJuego().puedeColocarTipoDeDefensa(tipo)) "listo" else "recargando"
-    return tipo + ": " + estado
+    if (tipo == null) { return "hud_seleccion_ninguna.png" }
+    const estado = if (controlesDeJuego.motorDeJuego().puedeColocarTipoDeDefensa(tipo)) "listo" else "recarga"
+    return "hud_seleccion_" + tipo + "_" + estado + ".png"
   }
-  method textColor() = "FFFFFF"
 }

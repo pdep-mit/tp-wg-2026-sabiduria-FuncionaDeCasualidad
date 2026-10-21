@@ -221,7 +221,7 @@ describe "ProyectilVerdura - integración con Verdulero y Mapa" {
     assert.equals("tomate_alto.png", proyectil.image())
     assert.equals(300, objetivo.vida())
 
-    8.times({ i => proyectil.actualizar() })
+    4.times({ i => proyectil.actualizar() })
     assert.equals(280, objetivo.vida())
   }
   
@@ -231,10 +231,10 @@ describe "ProyectilVerdura - integración con Verdulero y Mapa" {
     assert.equals(20, proyectil.danio())
   }
   
-  test "el proyectil recién disparado tiene la posición del Verdulero" {
+  test "el proyectil recién disparado aparece una casilla delante del Verdulero" {
     verdulero.disparar()
     const proyectil = mapaDeTest.proyectiles().first()
-    assert.equals(game.at(2, 3), proyectil.position())
+    assert.equals(game.at(3, 3), proyectil.position())
   }
   
   test "disparar dos veces genera dos proyectiles distintos" {
