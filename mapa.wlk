@@ -15,10 +15,8 @@ class Mapa {
 
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
-        const casillero= new Casillero(fila = f, columna = c, defensasActivas = entidades.defensasActivas())
-        casilleros.add(casillero)
-        game.addVisual(casillero)
-      })
+        casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = entidades.defensasActivas()))
+        game.addVisual(casilleros.last())})
     })
   }
 
