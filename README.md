@@ -3,86 +3,61 @@
 **Grupo:** FuncionaDeCasualidad
 
 **Integrantes:**
-- Nombre y Apellido
-- Nombre y Apellido
-- Nombre y Apellido
-- Nombre y Apellido
-- Nombre y Apellido
+- Pablo Manevy
+- Matías Orlando
+- Camila Echavarria
+- Thibes Mateo
+- Luciano Aieta
 
-## Consignas
+## Cómo ejecutarlo
 
-Todo lo que necesitan saber está explicado en [este documento](https://docs.google.com/document/d/1KoB12RIZk_xPhmnOJ-EfLIPNwkETD_EaYMp2srDu9QY/edit?tab=t.0#heading=h.wnm2lu4cls8j). Para todo lo demás, aseguren prestar atención a los comunicados por Discord.
+Con Wollok instalado, ejecutá desde la raíz del proyecto:
 
-Revisen los archivos de base y cambien lo que quieran para ajustarlo a sus necesidades. Lo primero que deberían hacer es actualizar 
+```powershell
+wollok run juego.ConurbanoVsZombies -p ./
+```
 
-Recuerden que para cada checkpoint hay [expectativas mínimas](https://docs.google.com/document/d/1KoB12RIZk_xPhmnOJ-EfLIPNwkETD_EaYMp2srDu9QY/edit?tab=t.0#heading=h.56t0qdv908v3) respecto a los conceptos aplicados. Procuren:
-- Validar su idea con el equipo docente que corresponda por su canal de Discord
-- Para cada checkpoint, asegurar que implementaron lo necesario para esa instancia, y crear un **tag** en el repositorio para facilitar la comparación entre versiones final e intermedias.
-- Para la demo final, crear un nuevo tag **demo** y actualizar este README con todo lo necesario.
-
-# Cómo jugar
-
-Juego de defensa por líneas desarrollado en Wollok. El checkpoint 1 integra el
-mapa de 5 filas × 9 columnas, las tres defensas, zombies comunes, pesos,
-recargas y derrota. Hay 45 casilleros jugables y una franja superior de estado. Ver la
-[explicación del dominio](explicaciones.md).
-El [diagrama de clases completo](DIAGRAMA_CLASES.md) muestra la estructura actual.
-
-Con Wollok instalado, ejecutar `wollok run juego.ConurbanoVsZombies -p ./`.
-Después de cambiar código o imágenes, detener esa ejecución con `Ctrl+C`,
-volver a ejecutar el comando y recargar la pestaña del juego. Wollok no
-actualiza una partida que ya estaba abierta.
+Luego abrír `http://localhost:3000` en tu navegador.
 
 ## Objetivo
 
-Evitá que los zombies, que avanzan de derecha a izquierda, alcancen la columna 0.
-El Vendecursos genera ingresos, el Verdulero ataca al zombie vivo más cercano
-delante suyo en su fila y el Panadero absorbe mordiscos. Los zombies se detienen
-en la casilla a la derecha de una defensa para atacarla. Al llegar un zombie
-a la casa, aparece el mensaje de derrota y la partida se detiene. Para volver
-a jugar, ejecutar nuevamente el programa.
+Defendé tu casa (la primera columna de la izquierda) evitando que los zombies crucen el mapa de 5 filas × 9 columnas.
+
+* **Ganás** si sobrevivís a las **4 oleadas** y eliminás a todos los zombies de la oleada final.
+* **Perdés** si algún zombie logra llegar a la casa.
+
+La barra superior muestra tus pesos, la velocidad activa (`1x` o `2x`), el estado de la partida y la defensa seleccionada (junto a si está lista o en recarga). Para jugar de nuevo cuando termina la partida, reiniciá el programa.
 
 ## Controles
 
-- `1`: seleccionar Vendecursos (50 pesos).
-- `2`: seleccionar Verdulero (100 pesos).
-- `3`: seleccionar Panadero (50 pesos).
-- También se puede elegir una defensa haciendo clic en su retrato del panel superior.
-- Flechas: mover el cursor, que comienza en la casilla `(0, 0)`.
-- La defensa elegida aparece semitransparente en el cursor si la casilla permite colocarla.
-- `Enter`: colocar la defensa seleccionada en la casilla del cursor.
-- `R`: alternar entre velocidad normal y 2x; el panel superior muestra el modo activo.
+* **`1` / `2` / `3`**: seleccionar **Vendecursos**, **Verdulero** o **Panadero**.
+* **Clic en el panel superior**: también te deja elegir la defensa haciendo clic en su retrato.
+* **Flechas (`↑` `↓` `←` `→`)**: mover el cursor por el tablero (si el casillero es válido, ves una vista previa).
+* **`Enter`**: colocar la defensa seleccionada en la casilla del cursor.
+* **`R`**: alternar entre velocidad normal (`1x`) y doble (`2x`).
 
-En 2x avanzan el doble de rápido los zombies, proyectiles, recargas, ataques y
-la generación de pesos.
+> Para colocar una defensa necesitás que te alcancen los pesos, que la recarga de ese tipo haya terminado, que la casilla esté libre (sin zombies ni otra defensa) y que no sea la última columna, reservada para la aparición de los zombies.
 
-La colocación requiere una casilla libre, sin zombies y fuera de la última
-columna, reservada para su aparición, además de pesos suficientes. Si no se
-puede colocar, no se descuenta dinero. La selección se conserva para colocar más
-defensas. La recarga es independiente por tipo: 60 ticks (1 segundo) para
-Vendecursos y Verdulero, 300 ticks (5 segundos) para Panadero. La franja
-superior muestra saldo, estado de la partida y selección con su recarga.
+## Economía y defensas
 
-## Economía y tiempos
+Arrancás la partida con **100 pesos** y además recibís **25 pesos** automáticamente cada 2 segundos.
 
-El juego actualiza 60 veces por segundo. Se empieza con 100 pesos y se reciben
-25 cada 120 ticks (2 segundos). Cada Vendecursos inicia una venta cada 120 ticks
-y agrega 25 pesos al llegar al segundo cuadro de su animación. El Verdulero
-inicia un ataque cada 30 ticks (0,5 segundos), lanza el proyectil en el tercer
-cuadro y hace 20 de daño cuando impacta. El Panadero tiene 500 de vida y recibe
-un 30% menos de daño.
-Aparece un zombie común cada 300 ticks (5 segundos) en una fila aleatoria.
-Cada zombie avanza una casilla cada 180 ticks (3 segundos); al alcanzar una
-defensa, le hace 10 de daño cada 30 ticks (0,5 segundos).
+| Defensa | Costo | Vida | Recarga | Qué hace |
+| :--- | :---: | :---: | :---: | :--- |
+| **Vendecursos** | 50 pesos | 100 | 1 s | Genera 25 pesos periódicamente. |
+| **Verdulero** | 100 pesos | 50 | 1 s | Lanza tomates (20 de daño) al zombie más cercano de su fila. |
+| **Panadero** | 50 pesos | 500 | 5 s | No ataca, pero aguanta muchos golpes (recibe un 30% menos de daño). |
+
+## Zombies
+
+| Zombie | Vida | Particularidad |
+| :--- | :---: | :--- |
+| **Común** | 100 | Avanza de derecha a izquierda y muerde a la defensa que tenga delante. |
+| **Albañil** | 300 | Mucho más resistente. |
+| **Motoquero** | 100 | Es **inmune al daño** mientras anda en moto; al toparse con una defensa se baja y recién ahí recibe daño. |
+| **Inspector** | 100 | Mientras siga vivo en el tablero, **bloquea a todos los Vendecursos** para que no generen pesos. |
 
 ## Verificación
 
-- `wollok test -p ./`: tests de dominio, controles e integración.
-- `wollok lint -p ./`: validación estática.
-
-Carnicero, Aguatero, fusiones, efectos temporales y zombies especiales quedan
-para etapas posteriores.
-
-# Explicaciones
-
-Las explicaciones teóricas y diagramas van a encontrarse en [explicaciones.md](explicaciones.md) a partir del Checkpoint #2.
+* `wollok test -p ./`: corre los tests del proyecto.
+* `wollok lint -p ./`: validación estática del código.
