@@ -1,0 +1,133 @@
+import wollok.game.*
+import mapa.*
+import pesos.*
+import zombies.*
+import oleadas.*
+
+describe "Oleada" {
+  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
+  const pesos = new SistemaDePesos(pesosDisponibles = 0, pesosPorGeneracion = 0, intervaloDeGeneracion = 1)
+  const oleada = new Oleada(
+    mapa = mapaDeTest,
+    sistemaDePesos = pesos,
+    zombiesPendientes = [zombieComun, zombieAlbanil],
+    intervaloDeAparicion = 3
+  )
+
+  method initialize() {
+    mapaDeTest.crearCasilleros()
+    oleada.iniciar()
+  }
+
+  test "genera un zombie cada vez que se cumple su intervalo" {
+    2.times({ i => oleada.actualizar() })
+    assert.equals(0, mapaDeTest.zombies().size())
+    oleada.actualizar()
+    assert.equals(1, mapaDeTest.zombies().size())
+    3.times({ i => oleada.actualizar() })
+    assert.equals(2, mapaDeTest.zombies().size())
+  }
+
+  test "genera los zombies en el orden de su secuencia, en la última columna" {
+    6.times({ i => oleada.actualizar() })
+    const zombies = mapaDeTest.zombies()
+    assert.that(zombies.first().className().endsWith("ZombieComun"))
+    assert.that(zombies.last().className().endsWith("ZombieAlbanil"))
+    assert.that(zombies.all({ zombie => zombie.position().x() == 8 }))
+  }
+
+  test "anuncia su nombre al iniciar" {
+    const final = new OleadaFinal(
+      mapa = mapaDeTest,
+      sistemaDePesos = pesos,
+      nombre = "¡Oleada final!",
+      zombiesPendientes = [zombieComun]
+    )
+    final.iniciar()
+    assert.equals("¡Oleada final!", anunciador.ultimoMensaje())
+  }
+
+  test "no genera más zombies después de agotar su secuencia" {
+    20.times({ i => oleada.actualizar() })
+    assert.equals(2, mapaDeTest.zombies().size())
+  }
+
+  test "no termina mientras queden zombies por generar o vivos en el mapa" {
+    assert.notThat(oleada.termino())
+    6.times({ i => oleada.actualizar() })
+    assert.notThat(oleada.termino())
+  }
+
+  test "termina cuando generó todos sus zombies y ya no queda ninguno en el mapa" {
+    6.times({ i => oleada.actualizar() })
+    mapaDeTest.zombies().forEach({ zombie => mapaDeTest.quitarZombie(zombie) })
+    assert.that(oleada.termino())
+  }
+}
+
+describe "GeneradorDeZombies" {
+  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
+  const pesos = new SistemaDePesos(pesosDisponibles = 0, pesosPorGeneracion = 0, intervaloDeGeneracion = 1)
+  const primera = new Oleada(
+    mapa = mapaDeTest,
+    sistemaDePesos = pesos,
+    zombiesPendientes = [zombieComun],
+    intervaloDeAparicion = 1,
+    bonusAlTerminar = 50
+  )
+  const final = new OleadaFinal(
+    mapa = mapaDeTest,
+    sistemaDePesos = pesos,
+    zombiesPendientes = [zombieAlbanil],
+    intervaloDeAparicion = 1,
+    bonusAlTerminar = 100
+  )
+  const generador = new GeneradorDeZombies(
+    mapa = mapaDeTest,
+    sistemaDePesos = pesos,
+    oleadasPendientes = [primera, final]
+  )
+
+  method initialize() {
+    mapaDeTest.crearCasilleros()
+  }
+
+  method eliminarZombies() {
+    mapaDeTest.zombies().forEach({ zombie => mapaDeTest.quitarZombie(zombie) })
+  }
+
+  test "empieza por la primera oleada" {
+    assert.equals(primera, generador.oleadaActual())
+    assert.notThat(generador.completoTodasLasOleadas())
+  }
+
+  test "al terminar una oleada paga su bonus y pasa a la siguiente" {
+    generador.actualizar()
+    self.eliminarZombies()
+    generador.actualizar()
+    assert.equals(50, pesos.pesosDisponibles())
+    assert.equals(final, generador.oleadaActual())
+  }
+
+  test "al terminar la oleada final se completan todas las oleadas" {
+    generador.actualizar()
+    self.eliminarZombies()
+    generador.actualizar()
+    generador.actualizar()
+    self.eliminarZombies()
+    generador.actualizar()
+    assert.that(generador.completoTodasLasOleadas())
+    assert.equals(150, pesos.pesosDisponibles())
+  }
+
+  test "sin más oleadas no se generan más zombies" {
+    generador.actualizar()
+    self.eliminarZombies()
+    generador.actualizar()
+    generador.actualizar()
+    self.eliminarZombies()
+    generador.actualizar()
+    10.times({ i => generador.actualizar() })
+    assert.equals(0, mapaDeTest.zombies().size())
+  }
+}

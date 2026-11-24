@@ -2,11 +2,6 @@ import defensas.*
 import zombies.*
 import mapa.*
 
-// ──────────────────────────────────────────────────────────────────
-// Tests de lógica de dominio de las defensas (Verdulero y Panadero)
-// Validan el comportamiento polimórfico: ambas responden a actualizar()
-// pero cada una lo implementa de forma diferente.
-// ──────────────────────────────────────────────────────────────────
 
 describe "Verdulero - lógica de dominio" {
 
@@ -38,16 +33,16 @@ describe "Verdulero - lógica de dominio" {
 
   test "muere cuando su vida llega a 0" {
     verdulero.recibirDanio(50)
-    assert.that(verdulero.estaMuerta())
+    assert.that(verdulero.estaMuerto())
   }
 
   test "muere cuando su vida queda negativa" {
     verdulero.recibirDanio(999)
-    assert.that(verdulero.estaMuerta())
+    assert.that(verdulero.estaMuerto())
   }
 
   test "no está muerta si tiene vida positiva" {
-    assert.notThat(verdulero.estaMuerta())
+    assert.notThat(verdulero.estaMuerto())
   }
 
   test "no puede actuar si no pasaron suficientes ticks" {
@@ -55,9 +50,6 @@ describe "Verdulero - lógica de dominio" {
   }
 
   test "puede actuar cuando se acumulan suficientes ticks" {
-    // Simular que pasaron los ticks suficientes llamando a actualizar()
-    // (cada llamada incrementa ticksDesdeUltimaAccion en 1).
-    // Como no hay zombies en el mapa, no va a atacar y el contador crece.
     10.times({ i => verdulero.actualizar() })
     assert.that(verdulero.puedeActuar())
   }
@@ -93,19 +85,18 @@ describe "Panadero - lógica de dominio" {
 
   test "aguanta muchos golpes antes de morir" {
     21.times({ i => panadero.recibirDanio(20) })
-    assert.notThat(panadero.estaMuerta())
-    // Cada golpe de 20 resta 14: el número 22 agota sus 300 de vida.
+    assert.notThat(panadero.estaMuerto())
     panadero.recibirDanio(20)
-    assert.that(panadero.estaMuerta())
+    assert.that(panadero.estaMuerto())
   }
 
   test "no está muerta si tiene vida positiva" {
-    assert.notThat(panadero.estaMuerta())
+    assert.notThat(panadero.estaMuerto())
   }
 
   test "muere cuando el daño reducido agota su vida" {
     panadero.recibirDanio(500)
-    assert.that(panadero.estaMuerta())
+    assert.that(panadero.estaMuerto())
   }
 
   test "su costo es barato" {
@@ -115,7 +106,7 @@ describe "Panadero - lógica de dominio" {
   test "actualizar no cambia la vida de una barrera pasiva" {
     panadero.actualizar()
     assert.equals(300, panadero.vida())
-    assert.notThat(panadero.estaMuerta())
+    assert.notThat(panadero.estaMuerto())
   }
 
   test "su posición es la indicada al construirlo" {
@@ -144,11 +135,8 @@ describe "Polimorfismo - actualizar() en defensas diferentes" {
   )
 
   test "todas las defensas entienden actualizar()" {
-    // El motor puede enviar el mismo mensaje a cualquier defensa.
-    // Este test valida que ambas responden sin error.
     const defensas = [verdulero, panadero]
     defensas.forEach({ defensa => defensa.actualizar() })
-    // Si llegamos acá sin error, el polimorfismo funciona.
     assert.that(true)
   }
 
@@ -161,6 +149,6 @@ describe "Polimorfismo - actualizar() en defensas diferentes" {
 
   test "todas las defensas consultan si están muertas" {
     const defensas = [verdulero, panadero]
-    assert.equals([false, false], defensas.map({ defensa => defensa.estaMuerta() }))
+    assert.equals([false, false], defensas.map({ defensa => defensa.estaMuerto() }))
   }
 }

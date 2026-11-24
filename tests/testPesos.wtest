@@ -10,13 +10,11 @@ describe "Tests para SistemaDePesos" {
 
 
 test "actualizar no genera pesos antes de los 50 ticks y suma 25 al cumplirlos" {
-    // Simulamos 49 ticks (uno menos que el intervalo)
     49.times({ i => pesosDeJuego.actualizar() })
-    assert.equals(100, pesosDeJuego.pesosDisponibles()) // Permanece en 100
+    assert.equals(100, pesosDeJuego.pesosDisponibles())
 
-    // En el tick 50 se cumple el intervalo
     pesosDeJuego.actualizar()
-    assert.equals(125, pesosDeJuego.pesosDisponibles()) // Suma 25 pesos
+    assert.equals(125, pesosDeJuego.pesosDisponibles())
   }
 
   test "agregarPesos incrementa correctamente el saldo de pesosDisponibles" {
@@ -25,8 +23,8 @@ test "actualizar no genera pesos antes de los 50 ticks y suma 25 al cumplirlos" 
   }
 
   test "alcanzaPara devuelve true si los pesosDisponibles son mayores o iguales al costo" {
-    assert.that(pesosDeJuego.alcanzaPara(100)) // Exactamente igual
-    assert.that(pesosDeJuego.alcanzaPara(50))  // Menor al saldo
+    assert.that(pesosDeJuego.alcanzaPara(100))
+    assert.that(pesosDeJuego.alcanzaPara(50))
   }
 
   test "alcanzaPara devuelve false si los pesosDisponibles son menores al costo" {

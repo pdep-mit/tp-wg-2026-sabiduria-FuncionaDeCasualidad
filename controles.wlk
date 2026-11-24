@@ -1,14 +1,15 @@
 import wollok.game.*
-import fabricaDeDefensas.*
+import defensas.*
+import motor.*
 
-// Adaptador para wollok.game: mantiene las teclas fuera del dominio.
 object controles {
-  var property motorDeJuego = null
-  var property tipoDeDefensaSeleccionada = null
+  var property tipoDeDefensaSeleccionada = ningunaDefensa
+  const tiposDeDefensa = [tipoVendecursos, tipoVerdulero, tipoPanadero]
+  const filaDelPanel = 5
+  const primeraColumnaDeRetratos = 6
 
-  method iniciar(unMotor) {
-    motorDeJuego = unMotor
-    tipoDeDefensaSeleccionada = null
+  method inicializar() {
+    tipoDeDefensaSeleccionada = ningunaDefensa
     cursor.position(game.at(0, 0))
     if (!game.hasVisual(vistaPreviaDeDefensa)) {
       game.addVisual(vistaPreviaDeDefensa)
@@ -19,92 +20,61 @@ object controles {
     keyboard.num1().onPressDo({ self.seleccionarDefensa(1) })
     keyboard.num2().onPressDo({ self.seleccionarDefensa(2) })
     keyboard.num3().onPressDo({ self.seleccionarDefensa(3) })
-    keyboard.r().onPressDo({ motorDeJuego.alternarVelocidad() })
-    keyboard.up().onPressDo({ self.moverCursor(0, 1) })
-    keyboard.down().onPressDo({ self.moverCursor(0, -1) })
-    keyboard.left().onPressDo({ self.moverCursor(-1, 0) })
-    keyboard.right().onPressDo({ self.moverCursor(1, 0) })
+    keyboard.r().onPressDo({ motor.alternarVelocidad() })
+    keyboard.up().onPressDo({ self.moverCursor(cursor.position().up(1)) })
+    keyboard.down().onPressDo({ self.moverCursor(cursor.position().down(1)) })
+    keyboard.left().onPressDo({ self.moverCursor(cursor.position().left(1)) })
+    keyboard.right().onPressDo({ self.moverCursor(cursor.position().right(1)) })
     keyboard.enter().onPressDo({ self.colocarEnCursor() })
     game.onClickDo({ posicion => self.seleccionarDefensaEnPanel(posicion) })
   }
 
-  method moverCursor(deltaColumna, deltaFila) {
-    if (motorDeJuego == null) { return }
-
-    const columna = cursor.position().x() + deltaColumna
-    const fila = cursor.position().y() + deltaFila
-    if (!motorDeJuego.mapa().contiene(fila, columna)) { return }
-
-    cursor.position(game.at(columna, fila))
-    return
+  method moverCursor(nuevaPosicion) {
+    if (motor.mapa().contiene(nuevaPosicion.y(), nuevaPosicion.x())) {
+      cursor.position(nuevaPosicion)
+    }
   }
 
   method colocarEnCursor() {
     self.colocarDefensaSeleccionada(cursor.position().y(), cursor.position().x())
   }
 
-  method seleccionarDefensa(tecla) {
-    if (tecla == 1 or tecla == "1") {
-      tipoDeDefensaSeleccionada = "vendecursos"
-    } else if (tecla == 2 or tecla == "2") {
-      tipoDeDefensaSeleccionada = "verdulero"
-    } else if (tecla == 3 or tecla == "3") {
-      tipoDeDefensaSeleccionada = "panadero"
+  method seleccionarDefensa(numero) {
+    if (numero.between(1, tiposDeDefensa.size())) {
+      tipoDeDefensaSeleccionada = tiposDeDefensa.get(numero - 1)
     }
   }
 
   method seleccionarDefensaEnPanel(posicion) {
-    if (posicion.y().roundDown() != 5) { return }
-    const columna = posicion.x().roundDown()
-    if (columna >= 6 and columna <= 8) {
-      self.seleccionarDefensa(columna - 5)
+    if (posicion.y().roundDown() == filaDelPanel) {
+      self.seleccionarDefensa(posicion.x().roundDown() - primeraColumnaDeRetratos + 1)
     }
-    return
   }
 
-  method crearDefensaSeleccionada(fila, columna) {
-    const fabrica = new FabricaDeDefensas(
-      mapa = if (motorDeJuego != null) motorDeJuego.mapa() else null,
-      sistemaDePesos = if (motorDeJuego != null) motorDeJuego.sistemaDePesos() else null
-    )
-    return fabrica.crear(tipoDeDefensaSeleccionada, fila, columna)
-  }
+  method crearDefensaSeleccionada(fila, columna) =
+    tipoDeDefensaSeleccionada.crear(game.at(columna, fila), motor.mapa(), motor.sistemaDePesos())
 
   method colocarDefensaSeleccionada(fila, columna) {
-    if (tipoDeDefensaSeleccionada == null or motorDeJuego == null) { return }
-
-    const defensa = self.crearDefensaSeleccionada(fila, columna)
-    if (!motorDeJuego.colocarDefensa(defensa, fila, columna)) { return }
-
-    // El cursor se dibuja sobre la defensa recién agregada.
-    game.removeVisual(cursor)
-    game.addVisual(cursor)
-    return
+    if (tipoDeDefensaSeleccionada.colocarEn(fila, columna, motor)) {
+      game.removeVisual(cursor)
+      game.addVisual(cursor)
+    }
   }
 }
 
 object cursor {
   var property position = game.at(0, 0)
 
-  method image() = if (controles.tipoDeDefensaSeleccionada() == null) "cursor.png" else "cursor_seleccion.png"
+  method image() = controles.tipoDeDefensaSeleccionada().imagenDeCursor()
 }
 
 object vistaPreviaDeDefensa {
   method position() = cursor.position()
 
-  method image() {
-    const tipo = controles.tipoDeDefensaSeleccionada()
-    const motorDeJuego = controles.motorDeJuego()
-    if (tipo == null or motorDeJuego == null or not motorDeJuego.enCurso()) {
-      return "defensa_previa_vacia.png"
-    }
-
-    const posicion = self.position()
-    if (not motorDeJuego.mapa().puedeColocarDefensaEn(posicion.y(), posicion.x())) {
-      return "defensa_previa_vacia.png"
-    }
-    return "defensa_previa_" + tipo + ".png"
-  }
+  method image() =
+    if (motor.enCurso() and motor.mapa().puedeColocarDefensaEn(self.position().y(), self.position().x()))
+      controles.tipoDeDefensaSeleccionada().imagenDeVistaPrevia()
+    else "defensa_previa_vacia.png"
 }
 
 class PanelSuperior {
@@ -115,12 +85,9 @@ class PanelSuperior {
 
 class IndicadorDeSeleccion {
   const property position
-  const controlesDeJuego
 
   method image() {
-    const tipo = controlesDeJuego.tipoDeDefensaSeleccionada()
-    if (tipo == null) { return "hud_seleccion_ninguna.png" }
-    const estado = if (controlesDeJuego.motorDeJuego().puedeColocarTipoDeDefensa(tipo)) "listo" else "recarga"
-    return "hud_seleccion_" + tipo + "_" + estado + ".png"
+    const tipo = controles.tipoDeDefensaSeleccionada()
+    return tipo.imagenDeSeleccion(if (motor.puedeColocarTipoDeDefensa(tipo)) "listo" else "recarga")
   }
 }

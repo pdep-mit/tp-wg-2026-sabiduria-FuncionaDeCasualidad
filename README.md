@@ -23,8 +23,10 @@ Luego abrír `http://localhost:3000` en tu navegador.
 
 Defendé tu casa (la primera columna de la izquierda) evitando que los zombies crucen el mapa de 5 filas × 9 columnas.
 
-* **Ganás** si sobrevivís a las **4 oleadas** y eliminás a todos los zombies de la oleada final.
+* **Ganás** si sobrevivís a las **5 oleadas** y eliminás a todos los zombies de la oleada final.
 * **Perdés** si algún zombie logra llegar a la casa.
+
+Cada oleada trae más zombies que la anterior (de 12 a 40) y los larga cada vez más seguido; al empezar se anuncia en pantalla y al terminar te da **50 pesos** de bonus. Una partida dura unos dos minutos.
 
 La barra superior muestra tus pesos, la velocidad activa (`1x` o `2x`), el estado de la partida y la defensa seleccionada (junto a si está lista o en recarga). Para jugar de nuevo cuando termina la partida, reiniciá el programa.
 
@@ -40,21 +42,21 @@ La barra superior muestra tus pesos, la velocidad activa (`1x` o `2x`), el estad
 
 ## Economía y defensas
 
-Arrancás la partida con **100 pesos** y además recibís **25 pesos** automáticamente cada 2 segundos.
+Arrancás la partida con **200 pesos** y además recibís **25 pesos** automáticamente cada segundo.
 
 | Defensa | Costo | Vida | Recarga | Qué hace |
 | :--- | :---: | :---: | :---: | :--- |
-| **Vendecursos** | 50 pesos | 100 | 1 s | Genera 25 pesos periódicamente. |
-| **Verdulero** | 100 pesos | 50 | 1 s | Lanza tomates (20 de daño) al zombie más cercano de su fila. |
-| **Panadero** | 50 pesos | 500 | 5 s | No ataca, pero aguanta muchos golpes (recibe un 30% menos de daño). |
+| **Vendecursos** | 50 pesos | 100 | 0,5 s | Genera 25 pesos por segundo. |
+| **Verdulero** | 100 pesos | 50 | 0,5 s | Lanza un tomate (20 de daño) cada 0,2 s al zombie más cercano de su fila. |
+| **Panadero** | 50 pesos | 500 | 2 s | No ataca, pero aguanta muchos golpes (recibe un 30% menos de daño). |
 
 ## Zombies
 
 | Zombie | Vida | Particularidad |
 | :--- | :---: | :--- |
-| **Común** | 100 | Avanza de derecha a izquierda y muerde a la defensa que tenga delante. |
-| **Albañil** | 300 | Mucho más resistente. |
-| **Motoquero** | 100 | Es **inmune al daño** mientras anda en moto; al toparse con una defensa se baja y recién ahí recibe daño. |
+| **Común** | 100 | Avanza una casilla cada 0,75 s de derecha a izquierda y muerde a la defensa que tenga delante. |
+| **Albañil** | 300 | Mucho más resistente, pero más lento: una casilla por segundo. |
+| **Motoquero** | 100 | En moto cruza el mapa en poco más de 1 segundo y es **inmune al daño**; al toparse con una defensa se baja y desde ahí camina y recibe daño como un común. |
 | **Inspector** | 100 | Mientras siga vivo en el tablero, **bloquea a todos los Vendecursos** para que no generen pesos. |
 
 ## Verificación

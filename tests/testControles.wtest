@@ -14,27 +14,42 @@ describe "Controles - selección y colocación de defensas" {
 
   method initialize() {
     mapaDeJuego.crearCasilleros()
-    motor.iniciar(mapaDeJuego, pesosDeJuego, null)
-    controles.iniciar(motor)
+    motor.inicializar(mapaDeJuego, pesosDeJuego, null)
+    controles.inicializar()
   }
 
   test "inicialmente no hay ninguna defensa seleccionada" {
-    controles.tipoDeDefensaSeleccionada(null)
-    assert.equals(null, controles.tipoDeDefensaSeleccionada())
+    assert.equals(ningunaDefensa, controles.tipoDeDefensaSeleccionada())
   }
 
-  test "seleccionar defensa con teclas 1, 2 y 3 (numérico o string)" {
+  test "sin defensa seleccionada, Enter no coloca nada ni cobra" {
+    controles.colocarDefensaSeleccionada(3, 4)
+    assert.equals([], mapaDeJuego.defensas())
+    assert.equals(100, pesosDeJuego.pesosDisponibles())
+  }
+
+  test "hacer clic en un retrato del panel selecciona esa defensa" {
+    controles.seleccionarDefensaEnPanel(game.at(7.5, 5.3))
+    assert.equals(tipoVerdulero, controles.tipoDeDefensaSeleccionada())
+    controles.seleccionarDefensaEnPanel(game.at(2, 5))
+    assert.equals(tipoVerdulero, controles.tipoDeDefensaSeleccionada())
+  }
+
+  test "seleccionar defensa con teclas 1, 2 y 3" {
     controles.seleccionarDefensa(1)
-    assert.equals("vendecursos", controles.tipoDeDefensaSeleccionada())
+    assert.equals(tipoVendecursos, controles.tipoDeDefensaSeleccionada())
 
     controles.seleccionarDefensa(2)
-    assert.equals("verdulero", controles.tipoDeDefensaSeleccionada())
+    assert.equals(tipoVerdulero, controles.tipoDeDefensaSeleccionada())
 
     controles.seleccionarDefensa(3)
-    assert.equals("panadero", controles.tipoDeDefensaSeleccionada())
+    assert.equals(tipoPanadero, controles.tipoDeDefensaSeleccionada())
+  }
 
-    controles.seleccionarDefensa("1")
-    assert.equals("vendecursos", controles.tipoDeDefensaSeleccionada())
+  test "un número fuera de rango conserva la selección anterior" {
+    controles.seleccionarDefensa(2)
+    controles.seleccionarDefensa(7)
+    assert.equals(tipoVerdulero, controles.tipoDeDefensaSeleccionada())
   }
 
   test "crearDefensaSeleccionada genera la instancia correspondiente en la fila y columna indicadas" {
@@ -56,9 +71,16 @@ describe "Controles - selección y colocación de defensas" {
     assert.equals(game.at(0, 0), vendecursos.position())
   }
 
+  test "el cursor se mueve con las flechas sin salir del mapa" {
+    controles.moverCursor(cursor.position().up(1))
+    controles.moverCursor(cursor.position().right(1))
+    assert.equals(game.at(1, 1), cursor.position())
+    controles.moverCursor(cursor.position().left(5))
+    assert.equals(game.at(1, 1), cursor.position())
+  }
+
   test "colocarDefensaSeleccionada delega la colocación al motor" {
     controles.seleccionarDefensa(2)
-    // No debe arrojar error al llamar a colocarDefensaSeleccionada
     controles.colocarDefensaSeleccionada(3, 4)
     assert.that(true)
   }

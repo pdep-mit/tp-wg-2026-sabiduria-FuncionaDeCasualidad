@@ -15,7 +15,6 @@ class IndicadorDePesos {
     return "hud_digito_" + lugar + "_" + digito + ".png"
   }
 
-  // Los saldos fuera del rango del rótulo conservan su valor legible.
   method text() = if (lugar == 1 and sistemaDePesos.pesosDisponibles() > 9999) "" + sistemaDePesos.pesosDisponibles() else ""
   method textColor() = "684019"
 }

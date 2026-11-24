@@ -1,0 +1,63 @@
+import wollok.game.*
+import mapa.*
+import pesos.*
+import motor.*
+import zombies.*
+import defensas.*
+import oleadas.*
+
+describe "Motor - ciclo de la partida" {
+  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
+  const pesos = new SistemaDePesos(pesosDisponibles = 500, pesosPorGeneracion = 0, intervaloDeGeneracion = 1000)
+
+  method iniciarCon(oleadas) {
+    motor.inicializar(mapaDeTest, pesos, new GeneradorDeZombies(
+      mapa = mapaDeTest,
+      sistemaDePesos = pesos,
+      oleadasPendientes = oleadas
+    ))
+  }
+
+  method oleadaLarga() = new Oleada(
+    mapa = mapaDeTest,
+    sistemaDePesos = pesos,
+    zombiesPendientes = [zombieComun],
+    intervaloDeAparicion = 100000
+  )
+
+  test "pierde cuando un zombie llega a la casa" {
+    self.iniciarCon([self.oleadaLarga()])
+    mapaDeTest.agregarZombie(new ZombieComun(position = game.at(0, 2), mapa = mapaDeTest))
+    motor.actualizar()
+    assert.notThat(motor.enCurso())
+    assert.notThat(motor.gano())
+  }
+
+  test "gana al terminar la última oleada" {
+    self.iniciarCon([new OleadaFinal(mapa = mapaDeTest, sistemaDePesos = pesos, zombiesPendientes = [])])
+    motor.actualizar()
+    assert.notThat(motor.enCurso())
+    assert.that(motor.gano())
+  }
+
+  test "retira del tablero a los zombies muertos" {
+    self.iniciarCon([self.oleadaLarga()])
+    const zombie = new ZombieComun(position = game.at(6, 2), mapa = mapaDeTest)
+    mapaDeTest.agregarZombie(zombie)
+    zombie.recibirDanio(100)
+    motor.actualizar()
+    assert.equals([], mapaDeTest.zombies())
+    assert.that(motor.enCurso())
+  }
+
+  test "al colocar una defensa cobra su costo y su tipo queda en recarga" {
+    self.iniciarCon([self.oleadaLarga()])
+    const verdulero = tipoVerdulero.crear(game.at(2, 1), mapaDeTest, pesos)
+    assert.that(motor.colocarDefensa(verdulero, 1, 2))
+    assert.equals(400, pesos.pesosDisponibles())
+    assert.notThat(motor.puedeColocarTipoDeDefensa(tipoVerdulero))
+    assert.that(motor.puedeColocarTipoDeDefensa(tipoPanadero))
+    verdulero.intervaloDeColocacion().times({ i => motor.actualizar() })
+    assert.that(motor.puedeColocarTipoDeDefensa(tipoVerdulero))
+  }
+}

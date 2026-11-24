@@ -1,30 +1,47 @@
 import wollok.game.*
 import proyectiles.*
 
-// Las defensas comparten estado y manejo de vida. Cada una define
-// su propia acción al actualizarse.
 class Defensa {
   var property position
   var property vida
-  const property costo
   const property mapa
+  const property costo
   const property intervaloDeColocacion
 
-  method recibirDanio(cantidad) {
-    vida -= cantidad
+  method animacion()
+
+  method tipo()
+
+  method image() = self.animacion().image()
+
+  method actualizar() {
+    if (not self.estaMuerto()) {
+      self.animacion().actualizar()
+      self.actuar()
+    }
   }
 
-  method estaMuerta() = vida <= 0
+  method recibirDanio(cantidad) {
+    vida = (vida - cantidad).max(0)
+  }
+
+  method estaMuerto() = vida <= 0
+
+  method actuar() { }
+
+  method reaccionarAInspector(hayInspector) { }
+
+  method retirarseDe(unMapa) {
+    unMapa.quitarDefensa(self)
+  }
 }
 
-// Verdulero: lanza verduras hacia los enemigos en su misma fila.
-// Alcance de toda la línea, daño básico, costo normal.
 class Verdulero inherits Defensa {
   const property danio
   const property intervaloDeAccion
-  const property velocidadDeProyectil = 0.3
-  var ticksDesdeUltimaAccion = 0
-  const animacion = new Animacion(
+  var ticksDesdeUltimoDisparo = 0
+  const property velocidadDeProyectil = 0.6
+  const property animacion = new Animacion(
     imagenQuieta = "verdulero_quieto.png",
     cuadros = [
       "verdulero_ataque_0.png",
@@ -33,75 +50,38 @@ class Verdulero inherits Defensa {
     ],
     ticksPorCuadro = self.intervaloDeAccion() / 3
   )
-  
-  method image() = animacion.image()
-  
-  method tipo() = "verdulero"
-  
-  method puedeActuar() = (ticksDesdeUltimaAccion >= intervaloDeAccion) and (!animacion.estaActiva())
-  
-  method actualizar() {
-    if (self.estaMuerta()) {
-      return
+
+  override method tipo() = tipoVerdulero
+
+  method puedeActuar() = ticksDesdeUltimoDisparo >= intervaloDeAccion and not animacion.estaActiva()
+
+  override method actuar() {
+    ticksDesdeUltimoDisparo += 1
+    if (self.puedeActuar() and self.buscarObjetivo() != null) {
+      self.realizarAccion()
+      ticksDesdeUltimoDisparo = 0
     }
-    
-    animacion.actualizar()
-    ticksDesdeUltimaAccion += 1
-    if (!self.puedeActuar()) {
-      return
-    }
-    
-    const objetivo = self.buscarObjetivo()
-    if (objetivo == null) {
-      return
-    }
-    
-    self.atacar(objetivo)
-    ticksDesdeUltimaAccion = 0
-    return
   }
-  
-  // Prioriza al zombie vivo más cercano delante de la defensa.
-  method buscarObjetivo() {
-    const zombiesEnMiFila = mapa.zombiesEnLinea(position.y()).filter(
-      { zombie =>
-        (!zombie.estaMuerto()) and (zombie.position().x() >= position.x()) }
-    ).sortedBy(
-      { primero, segundo => primero.position().x() < segundo.position().x() }
-    )
-    if (zombiesEnMiFila.isEmpty()) {
-      return null
-    }
-    return zombiesEnMiFila.first()
+
+  method realizarAccion() {
+    animacion.iniciar({ self.disparar() })
   }
-  
-  method atacar(zombie) {
-    self.animarAtaque(zombie)
-  }
-  
+
+  method buscarObjetivo() = mapa.zombieMasCercanoEn(position.y(), position.x(), mapa.columnas())
+
   method disparar() {
     const proyectil = new ProyectilVerdura(
-      position = game.at(position.x() + 1, position.y()),
+      position = position.right(1),
       danio = danio,
       velocidad = velocidadDeProyectil,
       mapa = mapa
     )
     mapa.agregarProyectil(proyectil)
-    game.addVisual(proyectil)
   }
-  
-  method animarAtaque(zombie) {
-    // El proyectil sale al entrar al tercer cuadro de la animación.
-    animacion.iniciar({ => self.disparar() })
-  }
-} // Panadero: barrera defensiva de alta vida. Deja un canasto de
+}
 
-// panes viejos que aguanta muchos golpes. Costo barato, recarga alta.
-// No ataca: su función es absorber daño.
 class Panadero inherits Defensa {
-  // El panadero no ataca, pero danio = 0 mantiene el protocolo uniforme.
-  const property danio = 0
-  const animacion = new Animacion(
+  const property animacion = new Animacion(
     imagenQuieta = "panadero_quieto.png",
     cuadros = [
       "panadero_cubrirse_0.png",
@@ -110,103 +90,116 @@ class Panadero inherits Defensa {
     ],
     ticksPorCuadro = 6
   )
-  
-  method image() = animacion.image()
-  
-  method tipo() = "panadero"
-  
-  override method recibirDanio(cantidad) {
-    // Reduce un 30% el daño antes de aplicar la lógica compartida.
-    super(cantidad * 0.7)
-    // Se cubre con los panes al recibir daño.
-    self.animarDanio()
-  }
-  
-  // Sigue siendo una barrera pasiva; el tick sólo actualiza su imagen.
-  method actualizar() {
-    if (self.estaMuerta()) {
-      return
-    }
-    animacion.actualizar()
-    return
-  }
-  
-  // Barrera pasiva: no dispara proyectiles.
-  method disparar(objetivo) {
-    
-  }
-  
-  method animarDanio() {
-    if (!animacion.estaActiva()) animacion.iniciar({   })
-  }
-} // Vendecursos: genera pesos periódicamente vendiendo cursos.
 
-// No ataca directamente. Puede ser bloqueado por un zombie inspector
-// (para una futura iteración).
+  override method tipo() = tipoPanadero
+
+  override method recibirDanio(cantidad) {
+    super(cantidad * 0.7)
+    if (not animacion.estaActiva()) animacion.iniciar({ })
+  }
+}
+
 class Vendecursos inherits Defensa {
-  // No ataca, pero danio = 0 mantiene el protocolo uniforme.
-  const property danio = 0
-  const property intervaloDeAccion
-  var ticksDesdeUltimaAccion = 0
   const property sistemaDePesos
   const property pesosPorVenta
-  var property bloqueado = false
-  const animacion = new Animacion(
+  const property intervaloDeAccion
+  var ticksDesdeUltimaVenta = 0
+  var bloqueado = false
+  const property animacion = new Animacion(
     imagenQuieta = "vendecursos_quieto.png",
     cuadros = ["vendecursos_salto_0.png", "vendecursos_salto_1.png"],
-    ticksPorCuadro = 20
+    ticksPorCuadro = 10
   )
-  
-  method image() = animacion.image()
-  
-  method tipo() = "vendecursos"
-  
-  method puedeActuar() = (ticksDesdeUltimaAccion >= intervaloDeAccion) and (!animacion.estaActiva())
-  
-  // Un zombie inspector puede bloquear al vendecursos para que
-  // no genere pesos hasta que el inspector muera.
+
+  override method tipo() = tipoVendecursos
+
   method estaBloqueado() = bloqueado
-  
-  method bloquear() {
-    bloqueado = true
+
+  override method reaccionarAInspector(hayInspector) {
+    bloqueado = hayInspector
   }
-  
-  method desbloquear() {
-    bloqueado = false
-  }
-  
-  method actualizar() {
-    if (self.estaMuerta()) {
-      return
+
+  method puedeActuar() = ticksDesdeUltimaVenta >= intervaloDeAccion and not animacion.estaActiva()
+
+  override method actuar() {
+    ticksDesdeUltimaVenta += 1
+    if (self.puedeActuar() and not bloqueado) {
+      self.realizarAccion()
+      ticksDesdeUltimaVenta = 0
     }
-    
-    animacion.actualizar()
-    ticksDesdeUltimaAccion += 1
-    if ((!self.puedeActuar()) or self.estaBloqueado()) {
-      return
-    }
-    
-    
-    ticksDesdeUltimaAccion = 0
-    self.animarVenta()
-    return
   }
-  
+
+  method realizarAccion() {
+    animacion.iniciar({ if (not bloqueado) self.generarPesos() })
+  }
+
   method generarPesos() {
     sistemaDePesos.agregarPesos(pesosPorVenta)
   }
-  
-  // No dispara proyectiles.
-  method disparar(objetivo) {
-    
-  }
-  
-  method animarVenta() {
-    animacion.iniciar({ if (!self.estaBloqueado()) self.generarPesos() })
-  }
-} // Cada acción inicia una secuencia; cada tick muestra el siguiente cuadro.
+}
 
-// Cada cuadro dura los ticks indicados; el bloque se ejecuta al entrar al último.
+class TipoDeDefensa {
+  method nombre()
+
+  method crear(posicion, mapa, sistemaDePesos)
+
+  method colocarEn(fila, columna, unMotor) =
+    unMotor.colocarDefensa(self.crear(game.at(columna, fila), unMotor.mapa(), unMotor.sistemaDePesos()), fila, columna)
+
+  method imagenDeCursor() = "cursor_seleccion.png"
+  method imagenDeVistaPrevia() = "defensa_previa_" + self.nombre() + ".png"
+  method imagenDeSeleccion(estadoDeRecarga) = "hud_seleccion_" + self.nombre() + "_" + estadoDeRecarga + ".png"
+}
+
+object ningunaDefensa {
+  method colocarEn(fila, columna, unMotor) = false
+  method imagenDeCursor() = "cursor.png"
+  method imagenDeVistaPrevia() = "defensa_previa_vacia.png"
+  method imagenDeSeleccion(estadoDeRecarga) = "hud_seleccion_ninguna.png"
+}
+
+object tipoVendecursos inherits TipoDeDefensa {
+  override method nombre() = "vendecursos"
+
+  override method crear(posicion, mapa, sistemaDePesos) = new Vendecursos(
+    position = posicion,
+    vida = 100,
+    costo = 50,
+    mapa = mapa,
+    intervaloDeColocacion = 30,
+    intervaloDeAccion = 60,
+    sistemaDePesos = sistemaDePesos,
+    pesosPorVenta = 25
+  )
+}
+
+object tipoVerdulero inherits TipoDeDefensa {
+  override method nombre() = "verdulero"
+
+  override method crear(posicion, mapa, sistemaDePesos) = new Verdulero(
+    position = posicion,
+    vida = 50,
+    costo = 100,
+    danio = 20,
+    mapa = mapa,
+    intervaloDeColocacion = 30,
+    intervaloDeAccion = 12
+  )
+}
+
+object tipoPanadero inherits TipoDeDefensa {
+  override method nombre() = "panadero"
+
+  override method crear(posicion, mapa, sistemaDePesos) = new Panadero(
+    position = posicion,
+    vida = 500,
+    costo = 50,
+    mapa = mapa,
+    intervaloDeColocacion = 120
+  )
+}
+
+
 class Animacion {
   const imagenQuieta
   const cuadros

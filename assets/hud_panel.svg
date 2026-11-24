@@ -20,8 +20,8 @@
   <path d="M609 18H881L885 21V74L881 78H609L605 74V21Z" fill="#ead9a6" stroke="#f9dea2" stroke-width="1"/>
 
   <!-- Pequeñas franjas verdes enlazan las fichas con el tema de defensa. -->
-  <path d="M73 20H191V25H73Z M209 20H316V25H209Z M334 20H588V25H334Z M606 20H884V25H606Z" fill="#6d913f"/>
-  <path d="M73 25H191 M209 25H316 M334 25H588 M606 25H884" stroke="#355722" stroke-width="2"/>
+  <path d="M73 19H191V22H73Z M209 19H316V22H209Z M334 19H588V22H334Z M606 19H884V22H606Z" fill="#6d913f"/>
+  <path d="M73 22.5H191 M209 22.5H316 M334 22.5H588 M606 22.5H884" stroke="#000" stroke-width="1"/>
 
   <!-- Moneda grande, con borde irregular como los recursos del juego. -->
   <path d="M35 15L41 18L48 17L53 22L59 24L60 31L65 37L62 44L65 51L61 58L58 66L50 68L44 73L36 70L29 73L22 69L15 65L13 57L9 51L12 43L10 36L15 29L17 23L25 20Z" fill="#56381d" stroke="#e1ae36" stroke-width="2"/>
@@ -30,14 +30,15 @@
   <text x="36" y="52" text-anchor="middle" font-family="Arial" font-size="25" font-weight="bold" fill="#8b5a17">$</text>
 
   <!-- Rótulos gruesos: los valores grandes se dibujan con sprites delante. -->
-  <g font-family="Impact" fill="#4f381f" text-anchor="middle" font-size="18" letter-spacing="1">
+  <g font-family="Impact" fill="#4f381f" text-anchor="middle" font-size="18" letter-spacing="2.8">
     <text x="133" y="38">PESOS</text>
     <text x="260" y="38">RITMO</text>
     <text x="460" y="38">PARTIDA</text>
   </g>
-  <path d="M282 28H306V40H282Z" fill="#6e8e3c" stroke="#375323" stroke-width="1"/>
+  <!-- La tecla R va abajo a la derecha para no tapar el rótulo. -->
+  <path d="M282 62H306V74H282Z" fill="#6e8e3c" stroke="#375323" stroke-width="1"/>
   <g font-family="Impact" fill="#f4e5ae" text-anchor="middle" font-size="10">
-    <text x="294" y="38">R</text>
+    <text x="294" y="72">R</text>
   </g>
 
   <!-- Clavos y borde de vereda que toca la calle. -->

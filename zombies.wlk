@@ -3,37 +3,35 @@ import wollok.game.*
 class Zombie {
   var property position
   var property vida
-  var property casillasPorPaso = 1
   const property mapa
-  const ticksEntrePasos = 90 // 1.5 segundos a 60 ticks por segundo
+  const ticksEntrePasos = 45
   var ticksDesdeUltimoPaso = 0
-  const property danio
-  const property intervaloDeAtaque = 30 // medio segundo entre mordiscos
-  var property ticksDesdeUltimoAtaque = 0
-  var property ticksAnimacionDanio = 0
-  const property imagenDanio 
-  var property imagenZombieGana 
-  var property imagenZombieActual 
-  const property imagenZombie2 
-  const property imagenZombieBase 
-  const property imagenZombieAtaca1
-  const property imagenZombieAtaca2 
-  
-  method image() {
-    if (ticksAnimacionDanio > 0) {
-      return imagenDanio
-    }
-    return imagenZombieActual
+  const property danio = 10
+  const property intervaloDeAtaque = 20
+  var ticksDesdeUltimoAtaque = 0
+  var ticksAnimacionDanio = 0
+  const apariencia
+  var imagenActual = null
+
+  override method initialize() {
+    super()
+    imagenActual = self.imagenDeCaminar()
   }
 
-  method actualizar() {
-    if (self.estaMuerto()) { return }
+  method image() = if (ticksAnimacionDanio > 0) self.imagen("_recibe_ataque") else imagenActual
 
+  method imagen(sufijo) = apariencia + sufijo + ".png"
+
+  method imagenDeCaminar() = self.imagen("1")
+
+  method imagenGana() = self.imagen("_gana")
+
+  method actuarEnElTick() {
     if (ticksAnimacionDanio > 0) {
       ticksAnimacionDanio -= 1
     }
     if (self.llegoALaCasa()) {
-      imagenZombieActual = imagenZombieGana
+      imagenActual = self.imagenGana()
       return
     }
 
@@ -49,11 +47,11 @@ class Zombie {
   method gestionarMovimiento() {
     ticksDesdeUltimoAtaque = 0
     ticksDesdeUltimoPaso += 1
-    if (ticksDesdeUltimoPaso < ticksEntrePasos) { return }
+    if (ticksDesdeUltimoPaso < self.ticksEntrePasos()) { return }
 
     self.avanzar()
     if (self.llegoALaCasa()) {
-      imagenZombieActual = imagenZombieGana
+      imagenActual = self.imagenGana()
     } else {
       self.cambiarPaso()
     }
@@ -62,40 +60,21 @@ class Zombie {
   }
 
   method avanzar() {
-    const siguienteColumna = (position.x() - casillasPorPaso).max(0)
-    // Busca en todo el tramo del paso dónde debe frenar frente a una defensa.
-    const defensasEnElPaso = mapa.defensas().filter({ defensa =>
-      !defensa.estaMuerta() and defensa.position().y() == position.y()
-        and (defensa.position().x() + 1).between(siguienteColumna, position.x())
-    }).sortedBy({ primera, segunda => primera.position().x() > segunda.position().x() })
-    if (defensasEnElPaso.isEmpty()) {
-      position = game.at(siguienteColumna, position.y())
-    } else {
-      position = game.at(defensasEnElPaso.first().position().x() + 1, position.y())
-    }
+    position = position.left(1)
   }
 
   method cambiarPaso() {
-    if (imagenZombieActual == imagenZombieBase) {
-      imagenZombieActual = imagenZombie2
-    } else {
-      imagenZombieActual = imagenZombieBase
-    }
+    imagenActual = if (imagenActual == self.imagenDeCaminar()) self.imagen("2") else self.imagenDeCaminar()
   }
 
   method defensaAlcanzada() {
-    // El zombie muerde a la defensa que está justo a su izquierda.
     const defensa = mapa.defensaEn(position.y(), position.x() - 1)
-    return if (defensa != null and !defensa.estaMuerta()) defensa else null
+    return if (defensa != null and !defensa.estaMuerto()) defensa else null
   }
 
   method atacar(defensa) {
     ticksDesdeUltimoAtaque += 1
-    if (ticksDesdeUltimoAtaque <= intervaloDeAtaque / 2) {
-      imagenZombieActual = imagenZombieAtaca1
-    } else {
-      imagenZombieActual = imagenZombieAtaca2
-    }
+    imagenActual = self.imagen(if (ticksDesdeUltimoAtaque <= intervaloDeAtaque / 2) "_ataque_1" else "_ataque_2")
     if (ticksDesdeUltimoAtaque >= intervaloDeAtaque) {
       defensa.recibirDanio(danio)
       ticksDesdeUltimoAtaque = 0
@@ -109,148 +88,86 @@ class Zombie {
 
   method estaMuerto() = vida <= 0
 
-  method esInspector() = false
+  method actualizar() {
+    if (not self.estaMuerto()) self.actuarEnElTick()
+  }
+
+  method retirarseDe(unMapa) {
+    unMapa.quitarZombie(self)
+  }
+
+  method bloqueaVentas() = false
 
   method llegoALaCasa() = position.x() <= 0
+
+  method ticksEntrePasos() = ticksEntrePasos
 }
 
-class ZombieComun inherits Zombie (
-  vida = 100, 
-  danio = 10, 
-  imagenDanio = "zombieComun_recibe_ataque.png",
-  imagenZombieGana = "zombieComun_gana.png", 
-  imagenZombieActual = "zombieComun1.png",
-  imagenZombie2 = "zombieComun2.png",
-  imagenZombieBase = "zombieComun1.png",
-  imagenZombieAtaca1 = "zombieComun_ataque_1.png",
-  imagenZombieAtaca2 = "zombieComun_ataque_2.png") {
+class ZombieComun inherits Zombie(vida = 100, apariencia = "zombieComun") { }
 
+class ZombieAlbanil inherits Zombie(vida = 300, apariencia = "zombieAlbanil", ticksEntrePasos = 60) { }
+
+class ZombieMotoquero inherits Zombie(vida = 100, apariencia = "zombieComun") {
+  var modo = enMoto
+
+  method bajarDeLaMoto() {
+    modo = aPie
+    imagenActual = self.imagenDeCaminar()
+  }
+
+  override method recibirDanio(cantidad) {
+    if (modo.esVulnerable()) super(cantidad)
+  }
+
+  override method atacar(defensa) {
+    if (modo.puedeMorder()) super(defensa) else self.bajarDeLaMoto()
+  }
+
+  override method cambiarPaso() {
+    if (modo.caminaConLasPiernas()) super()
+  }
+
+  override method imagenDeCaminar() = modo.imagenDeCaminar(super())
+
+  override method imagenGana() = modo.imagenGana(super())
+
+  override method ticksEntrePasos() = modo.ticksEntrePasos(super())
 }
 
-class ZombieAlbanil inherits Zombie (
-  vida = 300,
-  danio = 10,
-  imagenDanio = "zombieAlbanil_recibe_ataque.png", 
-  imagenZombieGana = "zombieAlbanil_gana.png",     
-  imagenZombieActual = "zombieAlbanil1.png",
-  imagenZombie2 = "zombieAlbanil2.png",
-  imagenZombieBase = "zombieAlbanil1.png",
-  imagenZombieAtaca1 = "zombieAlbanil_ataque_1.png",
-  imagenZombieAtaca2 = "zombieAlbanil_ataque_2.png") {
-
+object enMoto {
+  method esVulnerable() = false
+  method puedeMorder() = false
+  method caminaConLasPiernas() = false
+  method imagenDeCaminar(imagenAPie) = "zombieMotoquero.png"
+  method imagenGana(imagenAPie) = "zombieMotoquero_gana.png"
+  method ticksEntrePasos(ticksAPie) = 9
 }
 
-class ZombieMotoquero inherits Zombie (
-  vida = 100, 
-  danio = 10, 
-  imagenDanio = "zombieComun_recibe_ataque.png", //assets del zombieComun
-  imagenZombieGana = "zombieMotoquero_gana.png", 
-  imagenZombieActual = "zombieComun1.png",
-  imagenZombie2 = "zombieComun2.png",
-  imagenZombieBase = "zombieComun1.png",
-  imagenZombieAtaca1 = "zombieComun_ataque_1.png",
-  imagenZombieAtaca2 = "zombieComun_ataque_2.png") {
-
-    var modo = new ModoMotoquero(zombie = self)
-
-    override method initialize() {
-      super()
-      modo.aplicarAlZombie()
-    }
-
-    method bajarDeLaMoto() {
-      modo = new ModoComun(zombie = self)
-      imagenZombieGana = "zombieComun_gana.png"
-      modo.aplicarAlZombie()
-    }
-
-    override method recibirDanio(cantidad) {
-      modo.recibirDanio(cantidad)
-    }
-
-    override method atacar(defensa) {
-      modo.atacar(defensa)
-    }
-
-    override method cambiarPaso() {
-      modo.cambiarPaso()
-    }
-
+object aPie {
+  method esVulnerable() = true
+  method puedeMorder() = true
+  method caminaConLasPiernas() = true
+  method imagenDeCaminar(imagenAPie) = imagenAPie
+  method imagenGana(imagenAPie) = imagenAPie
+  method ticksEntrePasos(ticksAPie) = ticksAPie
 }
 
-class ModoMotoquero {
-  const zombie
-  const imagenMotoBase = "zombieMotoquero.png"
-  const imagenMotoGana = "zombieMotoquero_gana.png"
-
-  method aplicarAlZombie() {
-    zombie.imagenZombieActual(imagenMotoBase)
-  }
-  
-  method imagenGana() = imagenMotoGana
-
-  method cambiarPaso() {
-    zombie.imagenZombieActual(if(zombie.llegoALaCasa()) imagenMotoGana else imagenMotoBase)
-  }
-
-  method recibirDanio(cantidad) {
-    //no recibe danio mientras esta en modo motoquero
-  }
-
-  method atacar(defensa) {
-    zombie.bajarDeLaMoto()
-  }
+class ZombieInspector inherits Zombie(vida = 100, apariencia = "zombieInspector") {
+  override method bloqueaVentas() = not self.estaMuerto()
 }
 
-class ModoComun {
-  const zombie
-
-  method aplicarAlZombie() {
-    zombie.imagenZombieActual(zombie.imagenZombieBase())
-  }
-
-  method imagenGana() = zombie.imagenZombieGana()
-
-  method cambiarPaso() {
-    if (zombie.llegoALaCasa()) {
-      zombie.imagenZombieActual(zombie.imagenZombieGana())
-    } else if (zombie.imagenZombieActual() == zombie.imagenZombieBase()) {
-      zombie.imagenZombieActual(zombie.imagenZombie2())
-    } else {
-      zombie.imagenZombieActual(zombie.imagenZombieBase())
-    }
-  }
-
-  method recibirDanio(cantidad) {
-    zombie.vida((zombie.vida() - cantidad).max(0))
-    zombie.ticksAnimacionDanio(12)
-  }
-
-  method atacar(defensa) {
-    const ticks = zombie.ticksDesdeUltimoAtaque() + 1
-    zombie.ticksDesdeUltimoAtaque(ticks)
-    if (ticks <= zombie.intervaloDeAtaque() / 2) {
-      zombie.imagenZombieActual(zombie.imagenZombieAtaca1())
-    } else {
-      zombie.imagenZombieActual(zombie.imagenZombieAtaca2())
-    }
-    if (ticks >= zombie.intervaloDeAtaque()) {
-      defensa.recibirDanio(zombie.danio())
-      zombie.ticksDesdeUltimoAtaque(0)
-    }
-  }
+object zombieComun {
+  method crear(posicion, mapa) = new ZombieComun(position = posicion, mapa = mapa)
 }
 
-class ZombieInspector inherits Zombie (
-  vida = 100, 
-  danio = 10, 
-  imagenDanio = "zombieInspector_recibe_ataque.png",
-  imagenZombieGana = "zombieInspector_gana.png", 
-  imagenZombieActual = "zombieInspector1.png",
-  imagenZombie2 = "zombieInspector2.png",
-  imagenZombieBase = "zombieInspector1.png",
-  imagenZombieAtaca1 = "zombieInspector_ataque_1.png",
-  imagenZombieAtaca2 = "zombieInspector_ataque_2.png") {
+object zombieAlbanil {
+  method crear(posicion, mapa) = new ZombieAlbanil(position = posicion, mapa = mapa)
+}
 
-    override method esInspector() = true
+object zombieMotoquero {
+  method crear(posicion, mapa) = new ZombieMotoquero(position = posicion, mapa = mapa)
+}
+
+object zombieInspector {
+  method crear(posicion, mapa) = new ZombieInspector(position = posicion, mapa = mapa)
 }

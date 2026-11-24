@@ -1,25 +1,26 @@
 import wollok.game.*
-import entidades.*
 
-// Las clases visuales traducen columna/fila a x/y de wollok.game.
 class Mapa {
   const property filas
   const property columnas
   const property casilleros = []
-  const property entidades = new Entidades()
+  const defensas = []
+  const zombies = []
+  const proyectiles = []
 
   method crearCasilleros() {
     casilleros.clear()
-    entidades.reiniciarMapa()
+    defensas.clear()
+    zombies.clear()
+    proyectiles.clear()
     game.ground("marco-1.png")
 
     (0 .. filas - 1).forEach({ f =>
       (0 .. columnas - 1).forEach({ c =>
-        casilleros.add(new Casillero(fila = f, columna = c, defensasActivas = entidades.defensasActivas()))
+        casilleros.add(new Casillero(fila = f, columna = c))
         game.addVisual(casilleros.last())})
     })
   }
-
 
   method casilleroEn(fila, columna) {
     if (!self.contiene(fila, columna)) { return null }
@@ -34,119 +35,119 @@ class Mapa {
 
   method puedeColocarDefensaEn(fila, columna) {
     const casillero = self.casilleroEn(fila, columna)
-    return self.contiene(fila, columna) and columna < columnas - 1
+    return columna < columnas - 1
       and casillero != null and not casillero.estaOcupado()
-      and not self.zombies().any({ zombie =>
+      and not zombies.any({ zombie =>
         not zombie.estaMuerto() and zombie.position().x() == columna
           and zombie.position().y() == fila
       })
   }
 
   method colocarDefensa(defensa, fila, columna) {
-    if (entidades.defensasActivas().contains(defensa)) {
+    if (defensas.contains(defensa)) {
       self.error("La defensa ya está colocada en el mapa.")
     }
     if (!self.puedeColocarDefensaEn(fila, columna)) {
       self.error("No se puede colocar la defensa en la posición (" + columna + ", " + fila + ")")
     }
     self.casilleroEn(fila, columna).colocarDefensa(defensa)
+    defensas.add(defensa)
+    game.addVisual(defensa)
   }
 
   method quitarDefensa(defensa) {
-    const casillero = casilleros.findOrElse({ c => c.defensa() == defensa }, { null })
-    if (casillero != null) {
-      casillero.quitarDefensa()
-    }
+    self.casilleroEn(defensa.position().y(), defensa.position().x()).quitarDefensa()
+    defensas.remove(defensa)
+    self.quitarVisual(defensa)
   }
 
-  method defensas() {
-    // Devolver una copia protege la colección y permite retirar durante un recorrido.
-    return entidades.defensas()
-  }
+  method defensas() = defensas.copy()
+  method zombies() = zombies.copy()
+  method proyectiles() = proyectiles.copy()
 
   method agregarZombie(zombie) {
-    entidades.agregarZombie(zombie)
+    zombies.add(zombie)
+    game.addVisual(zombie)
   }
 
   method quitarZombie(zombie) {
-    entidades.quitarZombie(zombie)
+    zombies.remove(zombie)
+    self.quitarVisual(zombie)
   }
 
-  method zombies() = entidades.zombies()
-
   method agregarProyectil(proyectil) {
-    entidades.agregarProyectil(proyectil)
+    proyectiles.add(proyectil)
+    game.addVisual(proyectil)
   }
 
   method quitarProyectil(proyectil) {
-    entidades.quitarProyectil(proyectil)
+    proyectiles.remove(proyectil)
+    self.quitarVisual(proyectil)
   }
 
-  // Devuelve una copia protegida para iterar de forma segura.
-  method proyectiles() {
-    return entidades.proyectiles()
-  }
+  method entidades() = defensas + zombies + proyectiles
 
-  method zombiesEnLinea(fila) {
-    return self.zombies().filter({ zombie => zombie.position().y() == fila })
-  }
+  method zombiesEnLinea(fila) = zombies.filter({ zombie => zombie.position().y() == fila })
 
-  method zombiesEnRango(fila, columna, alcance) {
-    return self.zombiesEnLinea(fila).filter({ zombie =>
-      zombie.position().x() >= columna and zombie.position().x() <= (columna + alcance)
+  method zombieMasCercanoEn(fila, desde, hasta) {
+    const candidatos = self.zombiesEnLinea(fila).filter({ zombie =>
+      not zombie.estaMuerto() and zombie.position().x().between(desde, hasta)
     })
+    return if (candidatos.isEmpty()) null else candidatos.min({ zombie => zombie.position().x() })
   }
 
   method defensaEn(fila, columna) {
-    if (!self.contiene(fila, columna)) {
-      return null
-    }
     const casillero = self.casilleroEn(fila, columna)
-    if (casillero == null) {
-      return null
-    }
-    return casillero.defensa()
+    return if (casillero == null) null else casillero.defensa()
   }
 
-  method algunZombieLlegoALaCasa() {
-    return entidades.algunZombieLlegoALaCasa()
+  method algunZombieLlegoALaCasa() = zombies.any({ zombie => zombie.llegoALaCasa() })
+
+  method actualizar() {
+    self.avisarPresenciaDeInspector()
+    self.entidades().forEach({ entidad => entidad.actualizar() })
+    self.retirarMuertos()
+  }
+
+  method avisarPresenciaDeInspector() {
+    const hayInspector = zombies.any({ zombie => zombie.bloqueaVentas() })
+    self.defensas().forEach({ defensa => defensa.reaccionarAInspector(hayInspector) })
+  }
+
+  method retirarMuertos() {
+    self.entidades().filter({ entidad => entidad.estaMuerto() }).forEach({ entidad => entidad.retirarseDe(self) })
+  }
+
+  method quitarVisual(visual) {
+    if (game.hasVisual(visual)) game.removeVisual(visual)
   }
 }
 
 class Casillero {
-  const property imagen = "tile_centro.png"
   const property fila
   const property columna
   var defensa = null
-  const defensasActivas = []
 
   method defensa() = defensa
 
   method position() = game.at(columna, fila)
- method image() = 
- if (columna == 0 and fila == 4) "casa-1.png" 
- else if (columna == 0 and fila == 3) "casa-2.png"
- else if (columna == 0 and fila == 2) "casa-3.png"
- else if (columna == 0 and fila == 1) "casa-4.png"
- else if (columna == 0 and fila == 0) "casa-5.png"
- else if (fila ==2 and columna %2 !== 0) "calle-2.png"
- else "calle-1.png"
+
+  method image() =
+    if (columna == 0 and fila.between(0, 4)) "casa-" + (5 - fila) + ".png"
+    else if (fila == 2 and columna.odd()) "calle-2.png"
+    else "calle-1.png"
 
   method estaOcupado() = defensa != null
 
   method colocarDefensa(unaDefensa) {
-    if (self.estaOcupado() or defensasActivas.contains(unaDefensa)) {
+    if (self.estaOcupado()) {
       self.error("El casillero ya está ocupado.")
     }
     defensa = unaDefensa
     unaDefensa.position(self.position())
-    defensasActivas.add(unaDefensa)
   }
 
   method quitarDefensa() {
-    if (defensa != null) {
-      defensasActivas.remove(defensa)
-      defensa = null
-    }
+    defensa = null
   }
 }
