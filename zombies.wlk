@@ -115,7 +115,7 @@ class Zombie {
 }
 
 class ZombieComun inherits Zombie (
-  vida = 300, 
+  vida = 100, 
   danio = 10, 
   imagenDanio = "zombieComun_recibe_ataque.png",
   imagenZombieGana = "zombieComun_gana.png", 
@@ -128,7 +128,7 @@ class ZombieComun inherits Zombie (
 }
 
 class ZombieAlbanil inherits Zombie (
-  vida = 600,
+  vida = 300,
   danio = 10,
   imagenDanio = "zombieAlbanil_recibe_ataque.png", 
   imagenZombieGana = "zombieAlbanil_gana.png",     
@@ -141,7 +141,7 @@ class ZombieAlbanil inherits Zombie (
 }
 
 class ZombieMotoquero inherits Zombie (
-  vida = 300, 
+  vida = 200, 
   danio = 10, 
   imagenDanio = "zombieComun_recibe_ataque.png", //assets del zombieComun
   imagenZombieGana = "zombieComun_gana.png", 
@@ -193,7 +193,7 @@ class ZombieMotoquero inherits Zombie (
 }
 
 class ZombieInspector inherits Zombie (
-  vida = 300, 
+  vida = 100, 
   danio = 10, 
   imagenDanio = "zombieInspector_recibe_ataque.png",
   imagenZombieGana = "zombieInspector_gana.png", 

@@ -41,7 +41,7 @@ object motor {
     } 
    
 
-    if (entidades.generadorDeZombies().jefeFinalDerrotado()) {
+    if (entidades.generadorDeZombies().oleadaFinalCompletada()) {
       self.ganar()
       return
     }
@@ -117,127 +117,128 @@ class IndicadorDeVelocidad {
 }
 
 class GeneradorDeZombies {
-  var zombiesGenerados = 0
-  var oleadaActual = 1
-  var cantidadDeZombies = 5
   const property mapa
   const property intervaloDeAparicion
   var ticksDesdeUltimaAparicion = 0
+  const oleadas = [
+    new Oleada1(mapa = mapa), 
+    new Oleada2(mapa = mapa), 
+    new Oleada3(mapa = mapa), 
+    new OleadaFinal(mapa = mapa)]
+
+  var indiceOleadaActual = 0
+
+  method oleadaActual() = oleadas.get(indiceOleadaActual)
+
+  method hayMasOleadas() = indiceOleadaActual < oleadas.size()
+
+  method iniciar() {
+    if (self.hayMasOleadas()) {
+      ticksDesdeUltimaAparicion = 0
+      self.oleadaActual().iniciarOleada()
+    }
+  }
 
   method actualizar() {
-    if (zombiesGenerados < cantidadDeZombies) {
+    if (!self.hayMasOleadas()) {
+      return false
+    }
+    const oleada = self.oleadaActual()
+    if (oleada.puedeGenerarMas()) {
       ticksDesdeUltimaAparicion += 1
-      
       if (ticksDesdeUltimaAparicion >= intervaloDeAparicion) {
-        if (oleadaActual == 4) {
-          self.generarOleadaFinal()
-          zombiesGenerados += cantidadDeZombies
-        } else {
-          self.generarZombie()
-          zombiesGenerados += 1
-        }
+        self.generarEnOleada(oleada)
         ticksDesdeUltimaAparicion = 0
       }
     }
 
-    if (self.terminoPrimeraOleada()) {
-      self.iniciarSegundaOleada()
-      return 
+    if (oleada.terminoOleada()) {
+      self.avanzarOleada()
     }
-
-    if (self.terminoSegundaOleada()) {
-      self.iniciarTercerOleada()
-      return
-    }
-
-    if (self.terminoTerceraOleada()) {
-      self.iniciarOleadaFinal()
-      return
-    }
-
-    return true
+    return self.hayMasOleadas()
   }
 
-  method terminoPrimeraOleada() {
-    return zombiesGenerados >= cantidadDeZombies and 
-      mapa.entidades().zombies().isEmpty() and 
-      oleadaActual == 1
+  method generarEnOleada(oleada) {
+    const posicion = oleada.posicionDelZombie()
+    self.agregarZombie(oleada.crearProximoZombie(posicion))
+    
   }
 
-  method iniciarSegundaOleada() {
-    oleadaActual = 2
-    cantidadDeZombies = 7
-    zombiesGenerados = 0
-    ticksDesdeUltimaAparicion = 0
-  }
-
-  method terminoSegundaOleada() {
-    return zombiesGenerados >= cantidadDeZombies and 
-      mapa.entidades().zombies().isEmpty() and 
-      oleadaActual == 2
-  }
-
-  method iniciarTercerOleada() {
-    oleadaActual = 3
-    cantidadDeZombies = 8
-    zombiesGenerados = 0
-    ticksDesdeUltimaAparicion = 0
-  }
-
-  method terminoTerceraOleada() {
-    return zombiesGenerados >= cantidadDeZombies and 
-      mapa.entidades().zombies().isEmpty() and
-      oleadaActual == 3
-  }
-
-  method iniciarOleadaFinal() {
-    oleadaActual = 4
-    cantidadDeZombies = 5
-    zombiesGenerados = 0
-    ticksDesdeUltimaAparicion = 0
-  }
-
-  method generarOleadaFinal() {
-    const filaDelInspector = self.elegirFila()
-    self.agregarZombie(new ZombieInspector(
-      position = game.at(mapa.columnas() - 1, filaDelInspector), mapa = mapa
-    ))
-    (0 .. (mapa.filas() - 1)).filter({ fila => fila != filaDelInspector }).forEach({ fila =>
-      self.agregarZombie(new ZombieMotoquero(
-        position = game.at(mapa.columnas() - 1, fila), mapa = mapa
-      ))
-    })
-  }
-
-  method generarZombie() {
-    const posicion = game.at(mapa.columnas() - 1, self.elegirFila())
-
-    const zombie = if (oleadaActual == 3) {
-      if (zombiesGenerados < 3) {
-        new ZombieComun(position = posicion, mapa = mapa)
-      } else if (zombiesGenerados < 6) {
-        new ZombieAlbanil(position = posicion, mapa = mapa)
-      } else {
-        new ZombieMotoquero(position = posicion, mapa = mapa)
-      }
-    } else if (oleadaActual == 2 and zombiesGenerados >= 4) {
-      new ZombieAlbanil(position = posicion, mapa = mapa)
-    } else {
-      new ZombieComun(position = posicion, mapa = mapa)
-    }
-    self.agregarZombie(zombie)
+  method avanzarOleada() {
+    indiceOleadaActual += 1
+    self.iniciar()
   }
 
   method agregarZombie(zombie) {
     mapa.agregarZombie(zombie)
     game.addVisual(zombie)
   }
-  method elegirFila() = (0 .. (mapa.filas() - 1)).anyOne()
 
-  method jefeFinalDerrotado() {
-    return oleadaActual == 4 and
-      zombiesGenerados == cantidadDeZombies and 
-      not mapa.entidades().zombies().any({ zombie => zombie.esInspector() and not zombie.estaMuerto() })
-  }
+  method oleadaFinalCompletada() = oleadas.last().oleadaFinalCompletada()
   
+}
+
+class Oleada {
+  const mapa
+  const secuenciaZombies
+  var indiceActual = 0
+
+  method iniciarOleada() {
+    indiceActual = 0
+  }
+
+  method puedeGenerarMas() = indiceActual < secuenciaZombies.size()
+
+  method terminoOleada() = !self.puedeGenerarMas() && self.seEliminaronTodosLosZombies()
+
+  method seEliminaronTodosLosZombies() = mapa.entidades().zombies().isEmpty() 
+
+  method crearProximoZombie(posicion) {
+    const tipo = secuenciaZombies.get(indiceActual)
+    indiceActual += 1
+    return self.instanciarZombie(tipo, posicion)
+  }
+
+  method instanciarZombie(tipo, posicion) {
+    if (tipo == "comun") {
+      return new ZombieComun(position = posicion, mapa = mapa)
+    } else if (tipo == "albanil") {
+      return new ZombieAlbanil(position = posicion, mapa = mapa)
+    } else if (tipo == "motoquero") {
+      return new ZombieMotoquero(position = posicion, mapa = mapa)
+    } else {
+      return new ZombieInspector(position = posicion, mapa = mapa)
+    }
+  }
+
+  method elegirFila() = (0..(mapa.filas() -1)).anyOne()
+
+  method posicionDelZombie() = game.at(mapa.columnas() - 1, self.elegirFila())
+
+}
+
+class Oleada1 inherits Oleada (
+  secuenciaZombies = ["comun", "comun", "comun", "albanil"]
+) {
+}
+
+class Oleada2 inherits Oleada (
+  secuenciaZombies = ["comun", "comun", "albanil", "albanil", "motoquero"]
+) {
+}
+
+class Oleada3 inherits Oleada (
+  secuenciaZombies = ["inspector", "albanil", "motoquero", "albanil"]
+) {
+}
+
+class OleadaFinal inherits Oleada (
+  secuenciaZombies = ["motoquero", "motoquero", "comun", "inspector", "albanil", "albanil"]
+) {
+  method oleadaFinalCompletada() {
+    return not self.puedeGenerarMas() && self.seEliminaronTodosLosZombies()
+  }
+  override method terminoOleada() {
+    return self.oleadaFinalCompletada()
+  }
 }
