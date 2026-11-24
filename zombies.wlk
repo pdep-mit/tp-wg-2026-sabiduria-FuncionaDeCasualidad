@@ -5,19 +5,19 @@ class Zombie {
   var property vida
   var property casillasPorPaso = 1
   const property mapa
-  const ticksEntrePasos = 180 // 3 segundos a 60 ticks por segundo
+  const ticksEntrePasos = 90 // 1.5 segundos a 60 ticks por segundo
   var ticksDesdeUltimoPaso = 0
   const property danio
   const property intervaloDeAtaque = 30 // medio segundo entre mordiscos
-  var ticksDesdeUltimoAtaque = 0
-  var ticksAnimacionDanio = 0
-  const imagenDanio 
-  const imagenZombieGana 
-  var imagenZombieActual 
-  const imagenZombie2 
-  const imagenZombieBase 
-  const imagenZombieAtaca1
-  const imagenZombieAtaca2 
+  var property ticksDesdeUltimoAtaque = 0
+  var property ticksAnimacionDanio = 0
+  const property imagenDanio 
+  var property imagenZombieGana 
+  var property imagenZombieActual 
+  const property imagenZombie2 
+  const property imagenZombieBase 
+  const property imagenZombieAtaca1
+  const property imagenZombieAtaca2 
   
   method image() {
     if (ticksAnimacionDanio > 0) {
@@ -141,55 +141,104 @@ class ZombieAlbanil inherits Zombie (
 }
 
 class ZombieMotoquero inherits Zombie (
-  vida = 200, 
+  vida = 100, 
   danio = 10, 
   imagenDanio = "zombieComun_recibe_ataque.png", //assets del zombieComun
-  imagenZombieGana = "zombieComun_gana.png", 
+  imagenZombieGana = "zombieMotoquero_gana.png", 
   imagenZombieActual = "zombieComun1.png",
   imagenZombie2 = "zombieComun2.png",
   imagenZombieBase = "zombieComun1.png",
   imagenZombieAtaca1 = "zombieComun_ataque_1.png",
   imagenZombieAtaca2 = "zombieComun_ataque_2.png") {
 
-    var tieneMoto = true
-    const imagenMotoBase = "zombieMotoquero.png"
-    const imagenMotoGana = "zombieMotoquero_gana.png" 
+    var modo = new ModoMotoquero(zombie = self)
 
     override method initialize() {
       super()
-      casillasPorPaso = 2
-      imagenZombieActual = imagenMotoBase
+      modo.aplicarAlZombie()
+    }
+
+    method bajarDeLaMoto() {
+      modo = new ModoComun(zombie = self)
+      imagenZombieGana = "zombieComun_gana.png"
+      modo.aplicarAlZombie()
+    }
+
+    override method recibirDanio(cantidad) {
+      modo.recibirDanio(cantidad)
     }
 
     override method atacar(defensa) {
-      if(tieneMoto) {
-        self.perderMoto()
-      } else {
-        super(defensa)
-      }
-    }
-
-    method perderMoto() {
-      tieneMoto = false
-      casillasPorPaso = 1
-      imagenZombieActual = imagenZombieBase
+      modo.atacar(defensa)
     }
 
     override method cambiarPaso() {
-      if (tieneMoto) {
-        imagenZombieActual = imagenMotoBase
-      } else {
-        super()
-      }
+      modo.cambiarPaso()
     }
 
-    override method llegoALaCasa() {
-      const llego = super()
-      if (llego and tieneMoto) {
-        imagenZombieActual = imagenMotoGana
-      }
-      return llego
+}
+
+class ModoMotoquero {
+  const zombie
+  const imagenMotoBase = "zombieMotoquero.png"
+  const imagenMotoGana = "zombieMotoquero_gana.png"
+
+  method aplicarAlZombie() {
+    zombie.imagenZombieActual(imagenMotoBase)
+  }
+  
+  method imagenGana() = imagenMotoGana
+
+  method cambiarPaso() {
+    zombie.imagenZombieActual(if(zombie.llegoALaCasa()) imagenMotoGana else imagenMotoBase)
+  }
+
+  method recibirDanio(cantidad) {
+    //no recibe danio mientras esta en modo motoquero
+  }
+
+  method atacar(defensa) {
+    zombie.bajarDeLaMoto()
+  }
+}
+
+class ModoComun {
+  const zombie
+
+  method aplicarAlZombie() {
+    zombie.imagenZombieActual(zombie.imagenZombieBase())
+  }
+
+  method imagenGana() = zombie.imagenZombieGana()
+
+  method cambiarPaso() {
+    if (zombie.llegoALaCasa()) {
+      zombie.imagenZombieActual(zombie.imagenZombieGana())
+    } else if (zombie.imagenZombieActual() == zombie.imagenZombieBase()) {
+      zombie.imagenZombieActual(zombie.imagenZombie2())
+    } else {
+      zombie.imagenZombieActual(zombie.imagenZombieBase())
     }
+  }
+
+  method recibirDanio(cantidad) {
+    zombie.vida((zombie.vida() - cantidad).max(0))
+    zombie.ticksAnimacionDanio(12)
+  }
+
+  method atacar(defensa) {
+    const ticks = zombie.ticksDesdeUltimoAtaque() + 1
+    zombie.ticksDesdeUltimoAtaque(ticks)
+    if (ticks <= zombie.intervaloDeAtaque() / 2) {
+      zombie.imagenZombieActual(zombie.imagenZombieAtaca1())
+    } else {
+      zombie.imagenZombieActual(zombie.imagenZombieAtaca2())
+    }
+    if (ticks >= zombie.intervaloDeAtaque()) {
+      defensa.recibirDanio(zombie.danio())
+      zombie.ticksDesdeUltimoAtaque(0)
+    }
+  }
 }
 
 class ZombieInspector inherits Zombie (
