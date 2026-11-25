@@ -4,6 +4,18 @@ El diseño separa la coordinación del juego (`motor`, `GeneradorDeZombies`), el
 
 ---
 
+## Diagrama de clases
+
+### Versión simple
+
+![Diagrama de clases simple](diagramas/diagrama_simple.png)
+
+### Versión con atributos y métodos
+
+![Diagrama de clases con atributos y métodos](diagramas/diagrama_detallado.png)
+
+---
+
 ## Motor y configuración (`juego.wpgm`, `motor.wlk`)
 
 * **`ConurbanoVsZombies` (`juego.wpgm`)**: configura el tablero de `9×6` (5 filas jugables y 1 fila superior para el HUD), instancia `Mapa`, `SistemaDePesos` y `GeneradorDeZombies`, inicializa `motor` y `controles`, y registra el `game.onTick` principal a 60 Hz.
