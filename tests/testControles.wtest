@@ -52,23 +52,29 @@ describe "Controles - selección y colocación de defensas" {
     assert.equals(tipoVerdulero, controles.tipoDeDefensaSeleccionada())
   }
 
-  test "crearDefensaSeleccionada genera la instancia correspondiente en la fila y columna indicadas" {
+  test "crearDefensaSeleccionada genera una defensa del tipo elegido en la fila y columna indicadas" {
     controles.seleccionarDefensa(2)
     const verdulero = controles.crearDefensaSeleccionada(3, 4)
-    assert.notEquals(null, verdulero)
+    assert.equals(tipoVerdulero, verdulero.tipo())
     assert.equals(game.at(4, 3), verdulero.position())
-    assert.equals(100, verdulero.costo())
 
     controles.seleccionarDefensa(3)
     const panadero = controles.crearDefensaSeleccionada(1, 2)
-    assert.notEquals(null, panadero)
+    assert.equals(tipoPanadero, panadero.tipo())
     assert.equals(game.at(2, 1), panadero.position())
-    assert.equals(500, panadero.vida())
 
     controles.seleccionarDefensa(1)
     const vendecursos = controles.crearDefensaSeleccionada(0, 0)
-    assert.notEquals(null, vendecursos)
+    assert.equals(tipoVendecursos, vendecursos.tipo())
     assert.equals(game.at(0, 0), vendecursos.position())
+  }
+
+  test "colocarDefensaSeleccionada coloca la defensa elegida en el mapa y la cobra" {
+    controles.seleccionarDefensa(1)
+    controles.colocarDefensaSeleccionada(3, 4)
+    const colocada = mapaDeJuego.defensaEn(3, 4)
+    assert.equals(tipoVendecursos, colocada.tipo())
+    assert.equals(100 - colocada.costo(), pesosDeJuego.pesosDisponibles())
   }
 
   test "el cursor se mueve con las flechas sin salir del mapa" {
@@ -77,11 +83,5 @@ describe "Controles - selección y colocación de defensas" {
     assert.equals(game.at(1, 1), cursor.position())
     controles.moverCursor(cursor.position().left(5))
     assert.equals(game.at(1, 1), cursor.position())
-  }
-
-  test "colocarDefensaSeleccionada delega la colocación al motor" {
-    controles.seleccionarDefensa(2)
-    controles.colocarDefensaSeleccionada(3, 4)
-    assert.that(true)
   }
 }

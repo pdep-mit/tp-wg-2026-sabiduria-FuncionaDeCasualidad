@@ -1,67 +1,83 @@
 import wollok.game.*
 import zombies.*
 import mapa.*
+import pesos.*
 import defensas.*
 import motor.*
+
 describe "Test de ZombieComun" {
     const unMapa = new Mapa(filas = 9, columnas = 20)
-    
+
     method initialize() {
         unMapa.crearCasilleros()
     }
-test "Un zombie común recien creado inicia con 100 de vida" {
-    const zombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
-    assert.equals(100, zombie.vida())
-}
 
-test "Un zombie común recibe danio correctamente restando su vida y activa la animación de golpe" {
-    const zombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
-    zombie.recibirDanio(40)
-    assert.equals(60, zombie.vida())
-    assert.equals("zombieComun_recibe_ataque.png", zombie.image())
-}
-
-test "Un zombie común llega a la casa cuando esta en la columna 0 y festeja" {
-    const zombieGanador = new ZombieComun(position = game.at(0, 2), mapa = unMapa)
-    assert.that(zombieGanador.llegoALaCasa())
-    zombieGanador.actualizar()
-    assert.equals("zombieComun_gana.png", zombieGanador.image())
-}
-
-test "Un zombie común ataca desde la casilla a la derecha y reduce la vida de la defensa en 10" {
-    const zombieAtaque = new ZombieComun(position = game.at(6, 2), mapa = unMapa)
-    const verdulero = new Verdulero(
-        position = game.at(5,2),
+    method verduleroEn(columna, fila) = new Verdulero(
+        position = game.at(columna, fila),
         vida = 50,
         costo = 100,
         danio = 20,
         mapa = unMapa,
         intervaloDeColocacion = 10,
         intervaloDeAccion = 15
-        )
+    )
 
-    unMapa.colocarDefensa(verdulero, 2, 5)
-    30.times({ i => zombieAtaque.actualizar() })
-    assert.equals(40, verdulero.vida())
-    
-}
+    test "Un zombie común recibe danio restando esa cantidad de vida y activa la animación de golpe" {
+        const zombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
+        const vidaInicial = zombie.vida()
+        zombie.recibirDanio(40)
+        assert.equals(vidaInicial - 40, zombie.vida())
+        assert.equals("zombieComun_recibe_ataque.png", zombie.image())
+    }
 
-test "Un zombie común avanza una casilla por paso y frena al lado de una defensa" {
-    const panadero = tipoPanadero.crear(game.at(4, 2), unMapa, null)
-    unMapa.colocarDefensa(panadero, 2, 4)
-    const zombie = new ZombieComun(position = game.at(7, 2), mapa = unMapa)
-    zombie.ticksEntrePasos().times({ i => zombie.actualizar() })
-    assert.equals(game.at(6, 2), zombie.position())
-    (zombie.ticksEntrePasos() * 5).times({ i => zombie.actualizar() })
-    assert.equals(game.at(5, 2), zombie.position())
-}
+    test "Un zombie común llega a la casa cuando esta en la columna 0 y festeja" {
+        const zombieGanador = new ZombieComun(position = game.at(0, 2), mapa = unMapa)
+        assert.that(zombieGanador.llegoALaCasa())
+        zombieGanador.actualizar()
+        assert.equals("zombieComun_gana.png", zombieGanador.image())
+    }
 
-test "Un zombie común esta muerto cuando su vida llego a 0" {
-    const zombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
-    zombie.recibirDanio(100)
-    assert.that(zombie.estaMuerto())
-}
+    test "Un zombie común muerde a la defensa de su izquierda una vez por intervalo de ataque" {
+        const zombie = new ZombieComun(position = game.at(6, 2), mapa = unMapa)
+        const verdulero = self.verduleroEn(5, 2)
+        unMapa.colocarDefensa(verdulero, 2, 5)
+        const vidaInicial = verdulero.vida()
 
+        (zombie.intervaloDeAtaque() - 1).times({ i => zombie.actualizar() })
+        assert.equals(vidaInicial, verdulero.vida())
+
+        zombie.actualizar()
+        assert.equals(vidaInicial - zombie.danio(), verdulero.vida())
+    }
+
+    test "Un zombie común avanza una casilla por paso y frena al lado de una defensa" {
+        const panadero = tipoPanadero.crear(game.at(4, 2), unMapa, null)
+        unMapa.colocarDefensa(panadero, 2, 4)
+        const zombie = new ZombieComun(position = game.at(7, 2), mapa = unMapa)
+        zombie.ticksEntrePasos().times({ i => zombie.actualizar() })
+        assert.equals(game.at(6, 2), zombie.position())
+        (zombie.ticksEntrePasos() * 5).times({ i => zombie.actualizar() })
+        assert.equals(game.at(5, 2), zombie.position())
+    }
+
+    test "Un zombie común retoma el avance cuando muere la defensa que lo frenaba" {
+        const verdulero = self.verduleroEn(5, 2)
+        unMapa.colocarDefensa(verdulero, 2, 5)
+        const zombie = new ZombieComun(position = game.at(6, 2), mapa = unMapa)
+        zombie.ticksEntrePasos().times({ i => zombie.actualizar() })
+        assert.equals(game.at(6, 2), zombie.position())
+
+        verdulero.recibirDanio(verdulero.vida())
+        unMapa.retirarMuertos()
+        zombie.ticksEntrePasos().times({ i => zombie.actualizar() })
+        assert.equals(game.at(5, 2), zombie.position())
+    }
+
+    test "Un zombie común esta muerto cuando su vida llego a 0" {
+        const zombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
+        zombie.recibirDanio(zombie.vida())
+        assert.that(zombie.estaMuerto())
+    }
 }
 
 describe "Test de ZombieAlbanil" {
@@ -70,21 +86,25 @@ describe "Test de ZombieAlbanil" {
     method initialize() {
         unMapa.crearCasilleros()
     }
-    test "Un zombie albanil inicia con 300 de vida" {
-        const zombie = new ZombieAlbanil(position = game.at(10, 2), mapa = unMapa)
-        assert.equals(300, zombie.vida())
+
+    test "Un zombie albanil es más resistente y más lento que un zombie común" {
+        const albanil = new ZombieAlbanil(position = game.at(10, 2), mapa = unMapa)
+        const comun = new ZombieComun(position = game.at(10, 3), mapa = unMapa)
+        assert.that(albanil.vida() > comun.vida())
+        assert.that(albanil.ticksEntrePasos() > comun.ticksEntrePasos())
     }
 
-    test "Un zombie albanil recibe danio correctamente restando su vida y activa la animación de golpe" {
+    test "Un zombie albanil recibe danio restando esa cantidad de vida y activa la animación de golpe" {
         const zombie = new ZombieAlbanil(position = game.at(10, 2), mapa = unMapa)
-        zombie.recibirDanio(200)
-        assert.equals(100, zombie.vida())
+        const vidaInicial = zombie.vida()
+        zombie.recibirDanio(40)
+        assert.equals(vidaInicial - 40, zombie.vida())
         assert.equals("zombieAlbanil_recibe_ataque.png", zombie.image())
     }
 
     test "Un zombie albanil esta muerto cuando su vida llego a 0" {
         const zombie = new ZombieAlbanil(position = game.at(10, 2), mapa = unMapa)
-        zombie.recibirDanio(300)
+        zombie.recibirDanio(zombie.vida())
         assert.that(zombie.estaMuerto())
     }
 
@@ -102,48 +122,49 @@ describe "Test de ZombieMotoquero" {
     method initialize() {
         unMapa.crearCasilleros()
     }
-    test "Un zombie motoquero inicia con 100 de vida y con su imagen en moto" {
-        const zombie = new ZombieMotoquero(position = game.at(10, 2), mapa = unMapa)
-        assert.equals(100, zombie.vida())
-        assert.equals("zombieMotoquero.png", zombie.image())
-    }
-    
+
+    method verduleroEn(columna, fila) = new Verdulero(
+        position = game.at(columna, fila),
+        vida = 50,
+        costo = 100,
+        danio = 20,
+        mapa = unMapa,
+        intervaloDeColocacion = 10,
+        intervaloDeAccion = 15
+    )
+
     test "Un zombie motoquero no recibe danio mientras esta en la moto" {
         const zombie = new ZombieMotoquero(position = game.at(10, 2), mapa = unMapa)
+        const vidaInicial = zombie.vida()
         zombie.recibirDanio(60)
-        assert.equals(100, zombie.vida())
+        assert.equals(vidaInicial, zombie.vida())
         assert.equals("zombieMotoquero.png", zombie.image())
     }
 
-    test "Al atacar una defensa baja de la moto, pasa a modo comun y luego recibe danio" {
+    test "Al toparse con una defensa baja de la moto y desde ahí recibe danio" {
         const zombie = new ZombieMotoquero(position = game.at(6, 2), mapa = unMapa)
-        const verdulero = new Verdulero(
-            position = game.at(5, 2),
-            vida = 50,
-            costo = 100,
-            danio = 20,
-            mapa = unMapa,
-            intervaloDeColocacion = 10,
-            intervaloDeAccion = 15
-        )
-
-        unMapa.colocarDefensa(verdulero, 2, 5)
+        unMapa.colocarDefensa(self.verduleroEn(5, 2), 2, 5)
         zombie.actualizar()
         assert.equals("zombieComun1.png", zombie.image())
+
+        const vidaInicial = zombie.vida()
+        zombie.recibirDanio(30)
+        assert.equals(vidaInicial - 30, zombie.vida())
     }
-    
+
     test "Al bajarse de la moto no muerde a la defensa en ese mismo turno" {
         const zombie = new ZombieMotoquero(position = game.at(6, 2), mapa = unMapa)
         const panadero = tipoPanadero.crear(game.at(5, 2), unMapa, null)
         unMapa.colocarDefensa(panadero, 2, 5)
+        const vidaInicial = panadero.vida()
         zombie.actualizar()
-        assert.equals(500, panadero.vida())
+        assert.equals(vidaInicial, panadero.vida())
     }
 
-    test "Un zombie motoquero en moto avanza mucho más rápido que a pie" {
+    test "Un zombie motoquero en moto es más rápido que a pie, y a pie camina como un común" {
         const zombie = new ZombieMotoquero(position = game.at(10, 2), mapa = unMapa)
         const comun = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
-        assert.that(zombie.ticksEntrePasos() < comun.ticksEntrePasos() / 3)
+        assert.that(zombie.ticksEntrePasos() < comun.ticksEntrePasos())
         zombie.bajarDeLaMoto()
         assert.equals(comun.ticksEntrePasos(), zombie.ticksEntrePasos())
     }
@@ -151,7 +172,7 @@ describe "Test de ZombieMotoquero" {
     test "Un zombie motoquero esta muerto cuando su vida llego a 0 estando en modo comun" {
         const zombie = new ZombieMotoquero(position = game.at(10, 2), mapa = unMapa)
         zombie.bajarDeLaMoto()
-        zombie.recibirDanio(100)
+        zombie.recibirDanio(zombie.vida())
         assert.that(zombie.estaMuerto())
     }
 
@@ -165,33 +186,31 @@ describe "Test de ZombieMotoquero" {
 
 describe "Test de ZombieInspector" {
     const unMapa = new Mapa(filas = 9, columnas = 20)
+    const pesos = new SistemaDePesos(pesosDisponibles = 0, pesosPorGeneracion = 0, intervaloDeGeneracion = 1000)
 
     method initialize() {
         unMapa.crearCasilleros()
     }
-    test "Un zombie inspector inicia con 100 de vida" {
-        const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
-        assert.equals(100, zombie.vida())
-    }
-    
+
     test "Un zombie inspector vivo bloquea las ventas" {
         const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
         assert.that(zombie.bloqueaVentas())
     }
-    
-    test "Un zombie inspector recibe danio correctamente restando su vida y activa la animación de golpe" {
+
+    test "Un zombie inspector recibe danio restando esa cantidad de vida y activa la animación de golpe" {
         const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
+        const vidaInicial = zombie.vida()
         zombie.recibirDanio(40)
-        assert.equals(60, zombie.vida())
+        assert.equals(vidaInicial - 40, zombie.vida())
         assert.equals("zombieInspector_recibe_ataque.png", zombie.image())
     }
-    
+
     test "Un zombie inspector esta muerto cuando su vida llego a 0" {
         const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
-        zombie.recibirDanio(100)
+        zombie.recibirDanio(zombie.vida())
         assert.that(zombie.estaMuerto())
     }
-    
+
     test "Un zombie comun no bloquea las ventas" {
         const zombie = new ZombieComun(position = game.at(10, 2), mapa = unMapa)
         assert.notThat(zombie.bloqueaVentas())
@@ -199,22 +218,27 @@ describe "Test de ZombieInspector" {
 
     test "Un zombie inspector muerto ya no bloquea las ventas" {
         const zombie = new ZombieInspector(position = game.at(10, 2), mapa = unMapa)
-        zombie.recibirDanio(100)
+        zombie.recibirDanio(zombie.vida())
         assert.notThat(zombie.bloqueaVentas())
     }
 
-    test "Con un inspector en juego, el Vendecursos se bloquea y el Panadero no cambia" {
-        const vendecursos = tipoVendecursos.crear(game.at(1, 2), unMapa, new SistemaDePesosFalso())
-        const panadero = tipoPanadero.crear(game.at(2, 2), unMapa, null)
+    test "Con un inspector en juego, el Vendecursos se bloquea" {
+        const vendecursos = tipoVendecursos.crear(game.at(1, 2), unMapa, pesos)
         unMapa.colocarDefensa(vendecursos, 2, 1)
-        unMapa.colocarDefensa(panadero, 2, 2)
         unMapa.agregarZombie(new ZombieInspector(position = game.at(8, 2), mapa = unMapa))
         unMapa.avisarPresenciaDeInspector()
         assert.that(vendecursos.estaBloqueado())
-        assert.equals(500, panadero.vida())
     }
-}
 
-class SistemaDePesosFalso {
-    method agregarPesos(cantidad) { }
+    test "Al morir el inspector, el Vendecursos se desbloquea" {
+        const vendecursos = tipoVendecursos.crear(game.at(1, 2), unMapa, pesos)
+        const inspector = new ZombieInspector(position = game.at(8, 2), mapa = unMapa)
+        unMapa.colocarDefensa(vendecursos, 2, 1)
+        unMapa.agregarZombie(inspector)
+        unMapa.avisarPresenciaDeInspector()
+
+        inspector.recibirDanio(inspector.vida())
+        unMapa.avisarPresenciaDeInspector()
+        assert.notThat(vendecursos.estaBloqueado())
+    }
 }

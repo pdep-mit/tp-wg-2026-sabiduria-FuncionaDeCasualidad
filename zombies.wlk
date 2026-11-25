@@ -83,7 +83,7 @@ class Zombie {
 
   method recibirDanio(cantidad) {
     vida = (vida - cantidad).max(0)
-    ticksAnimacionDanio = 12
+    ticksAnimacionDanio = 5
   }
 
   method estaMuerto() = vida <= 0
@@ -152,7 +152,7 @@ object aPie {
   method ticksEntrePasos(ticksAPie) = ticksAPie
 }
 
-class ZombieInspector inherits Zombie(vida = 100, apariencia = "zombieInspector") {
+class ZombieInspector inherits Zombie(vida = 600, apariencia = "zombieInspector") {
   override method bloqueaVentas() = not self.estaMuerto()
 }
 

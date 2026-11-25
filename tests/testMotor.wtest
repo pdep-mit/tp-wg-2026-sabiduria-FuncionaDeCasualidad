@@ -44,7 +44,7 @@ describe "Motor - ciclo de la partida" {
     self.iniciarCon([self.oleadaLarga()])
     const zombie = new ZombieComun(position = game.at(6, 2), mapa = mapaDeTest)
     mapaDeTest.agregarZombie(zombie)
-    zombie.recibirDanio(100)
+    zombie.recibirDanio(zombie.vida())
     motor.actualizar()
     assert.equals([], mapaDeTest.zombies())
     assert.that(motor.enCurso())
@@ -54,10 +54,38 @@ describe "Motor - ciclo de la partida" {
     self.iniciarCon([self.oleadaLarga()])
     const verdulero = tipoVerdulero.crear(game.at(2, 1), mapaDeTest, pesos)
     assert.that(motor.colocarDefensa(verdulero, 1, 2))
-    assert.equals(400, pesos.pesosDisponibles())
+    assert.equals(500 - verdulero.costo(), pesos.pesosDisponibles())
     assert.notThat(motor.puedeColocarTipoDeDefensa(tipoVerdulero))
     assert.that(motor.puedeColocarTipoDeDefensa(tipoPanadero))
     verdulero.intervaloDeColocacion().times({ i => motor.actualizar() })
     assert.that(motor.puedeColocarTipoDeDefensa(tipoVerdulero))
+  }
+
+  test "no coloca ni cobra si no alcanzan los pesos" {
+    const sinPlata = new SistemaDePesos(pesosDisponibles = 0, pesosPorGeneracion = 0, intervaloDeGeneracion = 1000)
+    motor.inicializar(mapaDeTest, sinPlata, new GeneradorDeZombies(
+      mapa = mapaDeTest,
+      sistemaDePesos = sinPlata,
+      oleadasPendientes = [self.oleadaLarga()]
+    ))
+    const verdulero = tipoVerdulero.crear(game.at(2, 1), mapaDeTest, sinPlata)
+    assert.notThat(motor.colocarDefensa(verdulero, 1, 2))
+    assert.equals([], mapaDeTest.defensas())
+    assert.equals(0, sinPlata.pesosDisponibles())
+  }
+
+  test "no coloca ni cobra en un casillero ocupado" {
+    self.iniciarCon([self.oleadaLarga()])
+    motor.colocarDefensa(tipoVerdulero.crear(game.at(2, 1), mapaDeTest, pesos), 1, 2)
+    const saldo = pesos.pesosDisponibles()
+    assert.notThat(motor.colocarDefensa(tipoPanadero.crear(game.at(2, 1), mapaDeTest, pesos), 1, 2))
+    assert.equals(saldo, pesos.pesosDisponibles())
+  }
+
+  test "no coloca defensas con la partida terminada" {
+    self.iniciarCon([self.oleadaLarga()])
+    motor.perder()
+    assert.notThat(motor.colocarDefensa(tipoPanadero.crear(game.at(2, 1), mapaDeTest, pesos), 1, 2))
+    assert.equals([], mapaDeTest.defensas())
   }
 }

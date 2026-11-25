@@ -196,7 +196,7 @@ describe "Mapa - entidades" {
     const muerto = new ZombieComun(position = game.at(2, 2), mapa = mapa)
     mapa.agregarZombie(cercano)
     mapa.agregarZombie(muerto)
-    muerto.recibirDanio(100)
+    muerto.recibirDanio(muerto.vida())
     assert.equals(cercano, mapa.zombieMasCercanoEn(2, 0, 8))
     assert.equals(null, mapa.zombieMasCercanoEn(2, 4, 5))
     assert.equals(null, mapa.zombieMasCercanoEn(1, 0, 8))
@@ -207,14 +207,14 @@ describe "Mapa - entidades" {
   }
 
   test "un zombie muerto no muerde aunque siga en el mapa" {
-    zombie.recibirDanio(100)
-    60.times({ i => zombie.actualizar() })
+    zombie.recibirDanio(zombie.vida())
+    (zombie.intervaloDeAtaque() * 3).times({ i => zombie.actualizar() })
     assert.equals(100, panadero.vida())
   }
 
   test "retirarMuertos saca a cada muerto de su colección y libera el casillero" {
-    panadero.recibirDanio(1000)
-    zombie.recibirDanio(100)
+    panadero.recibirDanio(panadero.vida() * 2)
+    zombie.recibirDanio(zombie.vida())
     proyectil.impactar(new ZombieComun(position = game.at(1, 3), mapa = mapa))
     mapa.retirarMuertos()
     assert.equals([], mapa.entidades())
@@ -222,7 +222,7 @@ describe "Mapa - entidades" {
   }
 
   test "retirarMuertos deja a los vivos" {
-    zombie.recibirDanio(100)
+    zombie.recibirDanio(zombie.vida())
     mapa.retirarMuertos()
     assert.equals([panadero, proyectil], mapa.entidades())
   }

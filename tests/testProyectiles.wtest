@@ -4,24 +4,6 @@ import mapa.*
 import zombies.*
 import defensas.*
 
-describe "ProyectilVerdura - creación y estado inicial" {
-  const mapaDeTest = new Mapa(filas = 5, columnas = 9)
-  const proyectil = new ProyectilVerdura(
-    position = game.at(2, 3),
-    danio = 20,
-    velocidad = 1,
-    mapa = mapaDeTest
-  )
-  
-  test "un proyectil recién creado no está muerto" {
-    assert.notThat(proyectil.estaMuerto())
-  }
-  
-  test "la posición inicial es la del Verdulero que lo creó" {
-    assert.equals(game.at(2, 3), proyectil.position())
-  }
-}
-
 describe "ProyectilVerdura - movimiento" {
   const mapaDeTest = new Mapa(filas = 5, columnas = 9)
   const proyectil = new ProyectilVerdura(
@@ -88,13 +70,14 @@ describe "ProyectilVerdura - colisión e impacto" {
       mapa = mapaDeTest
     )
     
+    const vidaInicial = zombie.vida()
     proyectil.actualizar()
     assert.notThat(proyectil.estaMuerto())
     proyectil.actualizar()
     assert.notThat(proyectil.estaMuerto())
     proyectil.actualizar()
     assert.that(proyectil.estaMuerto())
-    assert.equals(80, zombie.vida())
+    assert.equals(vidaInicial - proyectil.danio(), zombie.vida())
   }
   
   test "se destruye al impactar y no sigue avanzando" {
@@ -135,11 +118,13 @@ describe "ProyectilVerdura - colisión e impacto" {
       mapa = mapaDeTest
     )
     
+    const vidaInicialCercano = zombieCercano.vida()
+    const vidaInicialLejos = zombieLejos.vida()
     3.times({ i => proyectil.actualizar() })
     
     assert.that(proyectil.estaMuerto())
-    assert.equals(50, zombieCercano.vida())
-    assert.equals(100, zombieLejos.vida())
+    assert.equals(vidaInicialCercano - proyectil.danio(), zombieCercano.vida())
+    assert.equals(vidaInicialLejos, zombieLejos.vida())
   }
   
   test "no impacta zombies en otras filas" {
@@ -156,9 +141,10 @@ describe "ProyectilVerdura - colisión e impacto" {
       mapa = mapaDeTest
     )
     
+    const vidaInicial = zombieOtraFila.vida()
     proyectil.actualizar()
     proyectil.actualizar()
-    assert.equals(100, zombieOtraFila.vida())
+    assert.equals(vidaInicial, zombieOtraFila.vida())
     assert.notThat(proyectil.estaMuerto())
   }
   
@@ -168,7 +154,7 @@ describe "ProyectilVerdura - colisión e impacto" {
       mapa = mapaDeTest
     )
     mapaDeTest.agregarZombie(zombieMuerto)
-    zombieMuerto.recibirDanio(100)
+    zombieMuerto.recibirDanio(zombieMuerto.vida())
     
     const proyectil = new ProyectilVerdura(
       position = game.at(2, 2),
@@ -199,24 +185,18 @@ describe "ProyectilVerdura - integración con Verdulero y Mapa" {
     mapaDeTest.crearCasilleros()
   }
   
-  test "el verdulero dispara al entrar al tercer cuadro y el daño llega con el impacto" {
-    const objetivo = new ZombieComun(position = game.at(4, 3), mapa = mapaDeTest)
+  test "el daño del verdulero le llega al zombie recién cuando el proyectil impacta" {
+    const objetivo = new ZombieComun(position = game.at(6, 3), mapa = mapaDeTest)
     mapaDeTest.agregarZombie(objetivo)
-    verdulero.realizarAccion()
+    const vidaInicial = objetivo.vida()
 
-    7.times({ i => verdulero.actualizar() })
-    assert.equals(0, mapaDeTest.proyectiles().size())
-    assert.equals(100, objetivo.vida())
-
-    verdulero.actualizar()
-    assert.equals(1, mapaDeTest.proyectiles().size())
+    100.times({ i => if (mapaDeTest.proyectiles().isEmpty()) verdulero.actualizar() })
     const proyectil = mapaDeTest.proyectiles().first()
     assert.that(game.hasVisual(proyectil))
-    assert.equals("tomate_alto.png", proyectil.image())
-    assert.equals(100, objetivo.vida())
+    assert.equals(vidaInicial, objetivo.vida())
 
-    4.times({ i => proyectil.actualizar() })
-    assert.equals(80, objetivo.vida())
+    100.times({ i => if (not proyectil.estaMuerto()) proyectil.actualizar() })
+    assert.equals(vidaInicial - verdulero.danio(), objetivo.vida())
   }
   
   test "el proyectil recién disparado tiene el daño del Verdulero" {

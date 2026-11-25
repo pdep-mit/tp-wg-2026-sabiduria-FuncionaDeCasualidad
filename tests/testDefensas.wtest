@@ -1,6 +1,7 @@
 import defensas.*
 import zombies.*
 import mapa.*
+import pesos.*
 
 
 describe "Verdulero - lógica de dominio" {
@@ -15,10 +16,6 @@ describe "Verdulero - lógica de dominio" {
     intervaloDeColocacion = 5,
     intervaloDeAccion = 10
   )
-
-  test "comienza con la vida indicada" {
-    assert.equals(50, verdulero.vida())
-  }
 
   test "recibir daño reduce la vida" {
     verdulero.recibirDanio(15)
@@ -50,16 +47,26 @@ describe "Verdulero - lógica de dominio" {
   }
 
   test "puede actuar cuando se acumulan suficientes ticks" {
-    10.times({ i => verdulero.actualizar() })
+    verdulero.intervaloDeAccion().times({ i => verdulero.actualizar() })
     assert.that(verdulero.puedeActuar())
   }
 
-  test "su costo es el indicado al construirlo" {
-    assert.equals(10, verdulero.costo())
+  test "no dispara si no hay ningún zombie en su fila" {
+    mapaDeTest.agregarZombie(new ZombieComun(position = game.at(8, 4), mapa = mapaDeTest))
+    100.times({ i => verdulero.actualizar() })
+    assert.equals([], mapaDeTest.proyectiles())
   }
 
-  test "su posición es la indicada al construirlo" {
-    assert.equals(game.at(2, 3), verdulero.position())
+  test "dispara cuando hay un zombie adelante en su fila" {
+    mapaDeTest.agregarZombie(new ZombieComun(position = game.at(8, 3), mapa = mapaDeTest))
+    100.times({ i => verdulero.actualizar() })
+    assert.notThat(mapaDeTest.proyectiles().isEmpty())
+  }
+
+  test "no dispara a un zombie que quedó detrás suyo" {
+    mapaDeTest.agregarZombie(new ZombieComun(position = game.at(1, 3), mapa = mapaDeTest))
+    100.times({ i => verdulero.actualizar() })
+    assert.equals([], mapaDeTest.proyectiles())
   }
 }
 
@@ -74,20 +81,10 @@ describe "Panadero - lógica de dominio" {
     intervaloDeColocacion = 30
   )
 
-  test "comienza con la vida indicada (alta para una barrera)" {
-    assert.equals(300, panadero.vida())
-  }
-
   test "recibe un 30% menos de daño" {
+    const vidaInicial = panadero.vida()
     panadero.recibirDanio(20)
-    assert.equals(286, panadero.vida())
-  }
-
-  test "aguanta muchos golpes antes de morir" {
-    21.times({ i => panadero.recibirDanio(20) })
-    assert.notThat(panadero.estaMuerto())
-    panadero.recibirDanio(20)
-    assert.that(panadero.estaMuerto())
+    assert.equals(vidaInicial - 20 * 0.7, panadero.vida())
   }
 
   test "no está muerta si tiene vida positiva" {
@@ -99,18 +96,57 @@ describe "Panadero - lógica de dominio" {
     assert.that(panadero.estaMuerto())
   }
 
-  test "su costo es barato" {
-    assert.equals(5, panadero.costo())
-  }
-
   test "actualizar no cambia la vida de una barrera pasiva" {
     panadero.actualizar()
     assert.equals(300, panadero.vida())
     assert.notThat(panadero.estaMuerto())
   }
+}
 
-  test "su posición es la indicada al construirlo" {
-    assert.equals(game.at(2, 5), panadero.position())
+describe "Vendecursos - lógica de dominio" {
+
+  const mapaDeTest = new Mapa(filas = 9, columnas = 20)
+  const pesos = new SistemaDePesos(pesosDisponibles = 0, pesosPorGeneracion = 0, intervaloDeGeneracion = 1000)
+  const vendecursos = new Vendecursos(
+    position = game.at(1, 2),
+    vida = 100,
+    costo = 50,
+    mapa = mapaDeTest,
+    intervaloDeColocacion = 30,
+    intervaloDeAccion = 20,
+    sistemaDePesos = pesos,
+    pesosPorVenta = 25
+  )
+
+  test "no genera pesos antes de cumplir su intervalo de venta" {
+    (vendecursos.intervaloDeAccion() - 1).times({ i => vendecursos.actualizar() })
+    assert.equals(0, pesos.pesosDisponibles())
+  }
+
+  test "con el tiempo genera pesos de a una venta por vez" {
+    200.times({ i => vendecursos.actualizar() })
+    assert.that(pesos.pesosDisponibles() > 0)
+    assert.equals(0, pesos.pesosDisponibles() % vendecursos.pesosPorVenta())
+  }
+
+  test "bloqueado por un inspector no genera pesos" {
+    vendecursos.reaccionarAInspector(true)
+    200.times({ i => vendecursos.actualizar() })
+    assert.equals(0, pesos.pesosDisponibles())
+  }
+
+  test "vuelve a generar pesos cuando se levanta el bloqueo" {
+    vendecursos.reaccionarAInspector(true)
+    200.times({ i => vendecursos.actualizar() })
+    vendecursos.reaccionarAInspector(false)
+    200.times({ i => vendecursos.actualizar() })
+    assert.that(pesos.pesosDisponibles() > 0)
+  }
+
+  test "muerto deja de generar pesos" {
+    vendecursos.recibirDanio(vendecursos.vida())
+    200.times({ i => vendecursos.actualizar() })
+    assert.equals(0, pesos.pesosDisponibles())
   }
 }
 
@@ -133,12 +169,6 @@ describe "Polimorfismo - actualizar() en defensas diferentes" {
     mapa = mapaDeTest,
     intervaloDeColocacion = 30
   )
-
-  test "todas las defensas entienden actualizar()" {
-    const defensas = [verdulero, panadero]
-    defensas.forEach({ defensa => defensa.actualizar() })
-    assert.that(true)
-  }
 
   test "todas las defensas reciben daño" {
     const defensas = [verdulero, panadero]

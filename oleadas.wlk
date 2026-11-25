@@ -82,19 +82,13 @@ class GeneradorDeZombies {
   const oleadasPendientes = [
     new Oleada(mapa = mapa, sistemaDePesos = sistemaDePesos,
       nombre = "Oleada 1", intervaloDeAparicion = 60,
-      zombiesPendientes = self.secuencia(12, [zombieComun, zombieComun, zombieComun, zombieAlbanil])),
+      zombiesPendientes = self.secuencia(6, [zombieComun, zombieComun, zombieAlbanil])),
     new Oleada(mapa = mapa, sistemaDePesos = sistemaDePesos,
-      nombre = "Oleada 2", intervaloDeAparicion = 45,
-      zombiesPendientes = self.secuencia(18, [zombieComun, zombieMotoquero, zombieComun, zombieAlbanil])),
-    new Oleada(mapa = mapa, sistemaDePesos = sistemaDePesos,
-      nombre = "Oleada 3", intervaloDeAparicion = 35,
-      zombiesPendientes = self.secuencia(24, [zombieComun, zombieMotoquero, zombieInspector, zombieAlbanil, zombieComun, zombieMotoquero])),
-    new Oleada(mapa = mapa, sistemaDePesos = sistemaDePesos,
-      nombre = "Oleada 4", intervaloDeAparicion = 28,
-      zombiesPendientes = self.secuencia(30, [zombieMotoquero, zombieComun, zombieAlbanil, zombieComun, zombieMotoquero, zombieInspector])),
+      nombre = "Oleada 2", intervaloDeAparicion = 9,
+      zombiesPendientes = self.secuencia(20, [zombieComun, zombieMotoquero, zombieComun, zombieAlbanil])),
     new OleadaFinal(mapa = mapa, sistemaDePesos = sistemaDePesos,
-      nombre = "¡Oleada final!", intervaloDeAparicion = 22,
-      zombiesPendientes = self.secuencia(40, [zombieMotoquero, zombieComun, zombieAlbanil, zombieMotoquero, zombieComun, zombieInspector, zombieAlbanil]))
+      nombre = "¡Oleada final!", intervaloDeAparicion = 5,
+      zombiesPendientes = self.secuencia(20, [zombieMotoquero, zombieComun, zombieAlbanil, zombieMotoquero, zombieComun, zombieInspector, zombieAlbanil]))
   ]
   var oleadaActual = sinMasOleadas
 

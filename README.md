@@ -23,10 +23,10 @@ Luego abrír `http://localhost:3000` en tu navegador.
 
 Defendé tu casa (la primera columna de la izquierda) evitando que los zombies crucen el mapa de 5 filas × 9 columnas.
 
-* **Ganás** si sobrevivís a las **5 oleadas** y eliminás a todos los zombies de la oleada final.
+* **Ganás** si sobrevivís a las **3 oleadas** y eliminás a todos los zombies de la oleada final.
 * **Perdés** si algún zombie logra llegar a la casa.
 
-Cada oleada trae más zombies que la anterior (de 12 a 40) y los larga cada vez más seguido; al empezar se anuncia en pantalla y al terminar te da **50 pesos** de bonus. Una partida dura unos dos minutos.
+La primera oleada trae 6 zombies (4 comunes y 2 albañiles) y las otras dos, 20 cada una. Los larga cada vez más seguido: uno por segundo en la primera, cada 0,15 s en la segunda y cada 0,08 s en la final. Al empezar cada oleada se anuncia en pantalla y al terminar te da **50 pesos** de bonus.
 
 La barra superior muestra tus pesos, la velocidad activa (`1x` o `2x`), el estado de la partida y la defensa seleccionada (junto a si está lista o en recarga). Para jugar de nuevo cuando termina la partida, reiniciá el programa.
 
